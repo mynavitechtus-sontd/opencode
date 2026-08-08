@@ -1,5 +1,5 @@
 import { createSignal, Show } from "solid-js"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
+import { Button } from "@opencode-ai/ui/button"
 import { Splash } from "@opencode-ai/ui/logo"
 import { createAuthStore } from "./auth"
 import { t } from "./i18n"
@@ -35,15 +35,15 @@ export function LoginScreen() {
       />
       <div class='flex flex-col items-center gap-8'>
         <Splash class='w-16 h-20 opacity-50' />
-        <ButtonV2
-          variant='outline'
-          size='large'
-          class='min-w-[240px] gap-2'
+        <Button
+          variant="secondary"
+          size="large"
+          class="min-w-[240px] gap-2 flex items-center justify-center"
           onClick={handleSignIn}
         >
           <GoogleLogo />
           {t("desktop.auth.signIn.withGoogle")}
-        </ButtonV2>
+        </Button>
         <Show when={error()}>
           {(msg) => <p class='text-12-regular text-red-500'>{msg()}</p>}
         </Show>
