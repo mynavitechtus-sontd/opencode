@@ -309,6 +309,9 @@ export function registerIpcHandlers(deps: Deps) {
     deps.auth.service.beginGoogleSignIn()
   })
   ipcMain.handle("auth:sign-out", () => deps.auth.service.signOut())
+  ipcMain.handle("auth:handle-callback", (_event: IpcMainInvokeEvent, url: string) =>
+    deps.auth.service.handleAuthCallback(url),
+  )
   ipcMain.handle("auth:subscribe", (event: IpcMainInvokeEvent) => {
     const id = event.sender.id
     authSubscriptions.get(id)?.()

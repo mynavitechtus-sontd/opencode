@@ -34,8 +34,8 @@ export function LoginScreen() {
       <div class="flex flex-col items-center gap-8">
         <Splash class="w-16 h-20 opacity-50" />
         <Button
-          variant="primary"
-          size="normal"
+          variant="secondary"
+          size="large"
           class="min-w-[240px] gap-2"
           onClick={handleSignIn}
         >

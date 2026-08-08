@@ -145,6 +145,7 @@ const api: ElectronAPI = {
         ipcRenderer.removeListener("auth:state-changed", handler)
       }
     },
+    handleCallback: (url) => ipcRenderer.invoke("auth:handle-callback", url),
   },
 }
 

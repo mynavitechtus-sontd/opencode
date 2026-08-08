@@ -58,6 +58,7 @@ export type AuthAPI = {
   signIn(): Promise<void>
   signOut(): Promise<void>
   subscribe(cb: (state: AuthState) => void): () => void
+  handleCallback(url: string): Promise<void>
 }
 
 export type ElectronAPI = {
