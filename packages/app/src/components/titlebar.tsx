@@ -392,7 +392,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                 }}
               >
                 <ChannelIndicator debugTools={props.debugTools} />
-                <div id="opencode-titlebar-left" class="flex items-center gap-1 shrink-0" />
+                <div id="opencode-titlebar-left" class="flex items-start shrink-0" style="width: 28px; height: 28px" />
                 <Show when={windows() || linux()}>
                   <WindowsAppMenu command={command} platform={platform} variant="v2" />
                 </Show>
