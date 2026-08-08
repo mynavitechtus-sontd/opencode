@@ -29,6 +29,11 @@ export function getDeviceId() {
   return id
 }
 
+export function saveDeviceId(id: string) {
+  const dir = ensureAuthDir()
+  writeFileSync(join(dir, "device_id.txt"), id)
+}
+
 export function encryptAndSave(key: string, data: string) {
   if (!safeStorage.isEncryptionAvailable()) throw new Error("encryption unavailable")
   const dir = ensureAuthDir()
@@ -151,8 +156,6 @@ export function createAuthService() {
     async handleAuthCallback(url: string) {
       const fragment = url.split("#")[1]
       if (!fragment) {
-        const errorParams = new URLSearchParams(url.split("?")[1] ?? "")
-        const error = errorParams.get("error")
         broadcast({ status: "signedOut" })
         return
       }
@@ -166,6 +169,7 @@ export function createAuthService() {
       }
       encryptAndSave("access_token", accessToken)
       encryptAndSave("refresh_token", refreshToken)
+      saveDeviceId(deviceId)
       try {
         const data = await apiRequest("GET", "/api/v1/auth/me", undefined, accessToken) as { user: AuthUser }
         if (data?.user) {
