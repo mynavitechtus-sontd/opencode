@@ -35,7 +35,7 @@ export function LoginScreen() {
         <Splash class="w-16 h-20 opacity-50" />
         <Button
           variant="primary"
-          size="medium"
+          size="normal"
           class="min-w-[240px] gap-2"
           onClick={handleSignIn}
         >
