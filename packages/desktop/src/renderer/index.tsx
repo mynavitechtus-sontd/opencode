@@ -350,7 +350,8 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
   // Fetch sidecar credentials (available immediately, before health check)
   const [sidecar] = createResource(() => window.api.awaitInitialization())
 
-  const [authLoading] = createResource(() => window.api.auth.getState())
+  const [authLoading, { refetch: refetchAuth }] = createResource(() => window.api.auth.getState())
+  onCleanup(window.api.auth.subscribe(() => refetchAuth()))
   const [defaultServer] = createResource(() => platform.getDefaultServer?.())
   const [locale] = createResource(loadLocale)
   const router = (props: BaseRouterProps) => (
