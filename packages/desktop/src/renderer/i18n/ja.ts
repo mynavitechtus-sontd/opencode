@@ -25,4 +25,10 @@ export const dict = {
     "CLI を {{path}} にインストールしました\n\nターミナルを再起動して 'opencode' コマンドを使用してください。",
   "desktop.cli.failed.title": "インストールに失敗しました",
   "desktop.cli.failed.message": "CLI のインストールに失敗しました: {{error}}",
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }

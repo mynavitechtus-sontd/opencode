@@ -25,4 +25,10 @@ export const dict = {
     "CLI встановлено за шляхом {{path}}\n\nПерезапустіть термінал, щоб використовувати команду 'opencode'.",
   "desktop.cli.failed.title": "Не вдалося встановити",
   "desktop.cli.failed.message": "Не вдалося встановити CLI: {{error}}",
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }
