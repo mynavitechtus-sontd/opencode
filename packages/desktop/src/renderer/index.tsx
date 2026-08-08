@@ -26,6 +26,7 @@ import { t } from "./i18n"
 import { initializationData } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
 import { LoginScreen } from "./login"
+import { DesktopUserMenu } from "./user-menu"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
@@ -372,7 +373,11 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
       }
     })
 
-    return null
+    return (
+      <>
+        <DesktopUserMenu />
+      </>
+    )
   }
 
   function App() {
