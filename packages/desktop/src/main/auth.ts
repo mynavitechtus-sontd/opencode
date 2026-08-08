@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { app, safeStorage } from "electron"
+import { app, safeStorage, shell } from "electron"
 
 export type AuthUser = {
   uuid: string
@@ -124,4 +124,71 @@ export async function signOut() {
     } catch {}
   }
   clearAllTokens()
+}
+
+export type AuthService = ReturnType<typeof createAuthService>
+
+export function createAuthService() {
+  const listeners = new Set<(state: AuthState) => void>()
+
+  const broadcast = (state: AuthState) => {
+    for (const cb of listeners) cb(state)
+  }
+
+  return {
+    loadSessionOnStartup,
+    signOut: async () => {
+      await signOut()
+      broadcast({ status: "signedOut" })
+    },
+    beginGoogleSignIn() {
+      void shell.openExternal(`${getApiBaseUrl()}/api/v1/auth/google`)
+    },
+    subscribe(cb: (state: AuthState) => void) {
+      listeners.add(cb)
+      return () => { listeners.delete(cb) }
+    },
+    async handleAuthCallback(url: string) {
+      const fragment = url.split("#")[1]
+      if (!fragment) {
+        const errorParams = new URLSearchParams(url.split("?")[1] ?? "")
+        const error = errorParams.get("error")
+        broadcast({ status: "signedOut" })
+        return
+      }
+      const params = new URLSearchParams(fragment)
+      const accessToken = params.get("access_token")
+      const refreshToken = params.get("refresh_token")
+      const deviceId = params.get("device_id")
+      if (!accessToken || !refreshToken || !deviceId) {
+        broadcast({ status: "signedOut" })
+        return
+      }
+      encryptAndSave("access_token", accessToken)
+      encryptAndSave("refresh_token", refreshToken)
+      try {
+        const data = await apiRequest("GET", "/api/v1/auth/me", undefined, accessToken) as { user: AuthUser }
+        if (data?.user) {
+          saveUserProfile(data.user)
+          broadcast({ status: "signedIn", user: data.user })
+          return
+        }
+      } catch {}
+      broadcast({ status: "signedOut" })
+    },
+    broadcast,
+  }
+}
+
+export function routeUrl(url: string, auth: AuthService): boolean {
+  try {
+    const u = new URL(url)
+    if (u.hostname === "auth") {
+      void auth.handleAuthCallback(url)
+      return true
+    }
+    return false
+  } catch {
+    return false
+  }
 }
