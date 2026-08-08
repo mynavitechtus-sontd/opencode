@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
-import type { ElectronAPI, WslServersEvent } from "./types"
+import type { AuthState, ElectronAPI, WslServersEvent } from "./types"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -133,6 +133,19 @@ const api: ElectronAPI = {
   setForceFocus: (enabled) => ipcRenderer.invoke("set-force-focus", enabled),
   recordFatalRendererError: (error) => ipcRenderer.invoke("record-fatal-renderer-error", error),
   setNativeTranslations: (bundle) => ipcRenderer.invoke("set-native-translations", bundle),
+  auth: {
+    getState: () => ipcRenderer.invoke("auth:get-state"),
+    signIn: () => ipcRenderer.invoke("auth:sign-in"),
+    signOut: () => ipcRenderer.invoke("auth:sign-out"),
+    subscribe: (cb) => {
+      const handler = (_: unknown, state: AuthState) => cb(state)
+      ipcRenderer.on("auth:state-changed", handler)
+      void ipcRenderer.invoke("auth:subscribe")
+      return () => {
+        ipcRenderer.removeListener("auth:state-changed", handler)
+      }
+    },
+  },
 }
 
 contextBridge.exposeInMainWorld("api", api)

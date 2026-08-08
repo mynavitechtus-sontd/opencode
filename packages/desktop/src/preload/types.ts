@@ -42,6 +42,24 @@ export type FatalRendererError = {
   os?: string
 }
 
+export type AuthUser = {
+  uuid: string
+  email: string
+  fullname: string
+  avatar_url?: string
+}
+
+export type AuthState =
+  | { status: "signedOut"; user?: never }
+  | { status: "signedIn"; user: AuthUser }
+
+export type AuthAPI = {
+  getState(): Promise<AuthState>
+  signIn(): Promise<void>
+  signOut(): Promise<void>
+  subscribe(cb: (state: AuthState) => void): () => void
+}
+
 export type ElectronAPI = {
   killSidecar: () => Promise<void>
   installCli: () => Promise<string>
@@ -113,4 +131,5 @@ export type ElectronAPI = {
   setForceFocus: (enabled: boolean) => Promise<void>
   recordFatalRendererError: (error: FatalRendererError) => Promise<void>
   setNativeTranslations: (bundle: DesktopNativeBundle) => Promise<void>
+  auth: AuthAPI
 }
