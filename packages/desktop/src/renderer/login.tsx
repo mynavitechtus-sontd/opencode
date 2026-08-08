@@ -1,8 +1,8 @@
 import { createSignal, Show } from "solid-js"
-import { useLanguage } from "@opencode-ai/app"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { Splash } from "@opencode-ai/ui/logo"
 import { createAuthStore } from "./auth"
+import { t } from "./i18n"
 
 function GoogleLogo() {
   return (
@@ -16,7 +16,6 @@ function GoogleLogo() {
 }
 
 export function LoginScreen() {
-  const language = useLanguage()
   const auth = createAuthStore()
   const [error, setError] = createSignal<string | null>(null)
 
@@ -24,30 +23,31 @@ export function LoginScreen() {
     try {
       await auth.signIn()
     } catch (err) {
-      setError(language.t("desktop.auth.signIn.error.default"))
+      setError(t("desktop.auth.signIn.error.default"))
     }
   }
 
   return (
-    <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base">
-      <div class="absolute inset-x-0 top-0 h-10" style="-webkit-app-region: drag" />
-      <div class="flex flex-col items-center gap-8">
-        <Splash class="w-16 h-20 opacity-50" />
+    <div class='h-dvh w-screen flex flex-col items-center justify-center bg-background-base'>
+      <div
+        class='absolute inset-x-0 top-0 h-10'
+        style='-webkit-app-region: drag'
+      />
+      <div class='flex flex-col items-center gap-8'>
+        <Splash class='w-16 h-20 opacity-50' />
         <ButtonV2
-          variant="outline"
-          size="large"
-          class="min-w-[240px] gap-2"
+          variant='outline'
+          size='large'
+          class='min-w-[240px] gap-2'
           onClick={handleSignIn}
         >
           <GoogleLogo />
-          {language.t("desktop.auth.signIn.withGoogle")}
+          {t("desktop.auth.signIn.withGoogle")}
         </ButtonV2>
         <Show when={error()}>
-          {(msg) => (
-            <p class="text-12-regular text-red-500">{msg()}</p>
-          )}
+          {(msg) => <p class='text-12-regular text-red-500'>{msg()}</p>}
         </Show>
       </div>
     </div>
-  )
+  );
 }
