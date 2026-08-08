@@ -24,4 +24,7 @@ export const dict = {
   "desktop.cli.installed.message": "CLI installed to {{path}}\n\nRestart your terminal to use the 'opencode' command.",
   "desktop.cli.failed.title": "Installation Failed",
   "desktop.cli.failed.message": "Failed to install CLI: {{error}}",
+
+  "desktop.auth.signIn.withGoogle": "Sign in with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed",
 }
