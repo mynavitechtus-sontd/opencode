@@ -1,6 +1,6 @@
 import { Portal } from "solid-js/web"
 import { Show } from "solid-js"
-import { useTitlebarRightMount } from "@opencode-ai/app"
+import { useTitlebarLeftMount } from "@opencode-ai/app"
 import { Avatar } from "@opencode-ai/ui/v2/avatar-v2"
 import { MenuV2 } from "@opencode-ai/ui/v2/menu-v2"
 import { createAuthStore } from "./auth"
@@ -17,17 +17,16 @@ function SignOutIcon() {
 
 export function DesktopUserMenu() {
   const auth = createAuthStore()
-  const rightMount = useTitlebarRightMount()
+  const leftMount = useTitlebarLeftMount()
 
   return (
-    <Show when={rightMount()} keyed>
+    <Show when={leftMount()} keyed>
       {(mount) => (
         <Portal mount={mount}>
           <Show when={auth.state().status === "signedIn" && auth.state().user} keyed>
             {(user) => (
-              <div class="flex items-center">
-                <MenuV2 gutter={4} modal={false} placement="bottom-end">
-                  <MenuV2.Trigger as="button" type="button" class="outline-none mr-1.5">
+              <MenuV2 gutter={4} modal={false} placement="bottom-start">
+                <MenuV2.Trigger as="button" type="button" class="outline-none">
                     <Avatar
                       size="x-large"
                       src={user.avatar_url}
@@ -56,8 +55,7 @@ export function DesktopUserMenu() {
                       </MenuV2.Item>
                     </MenuV2.Content>
                   </MenuV2.Portal>
-                </MenuV2>
-              </div>
+              </MenuV2>
             )}
           </Show>
         </Portal>

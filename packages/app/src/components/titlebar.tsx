@@ -61,6 +61,15 @@ export function useTitlebarRightMount() {
   return mount
 }
 
+export function useTitlebarLeftMount() {
+  const language = useLanguage()
+  const [mount, setMount] = createSignal<HTMLElement | null>(null)
+  const sync = () => setMount(document.getElementById("opencode-titlebar-left"))
+  onMount(sync)
+  createEffect(on(language.direction, sync, { defer: true }))
+  return mount
+}
+
 export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visible: boolean; toggle: () => void } }) {
   const layout = useLayout()
   const platform = usePlatform()
@@ -383,6 +392,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                 }}
               >
                 <ChannelIndicator debugTools={props.debugTools} />
+                <div id="opencode-titlebar-left" class="flex items-center gap-1 shrink-0" />
                 <Show when={windows() || linux()}>
                   <WindowsAppMenu command={command} platform={platform} variant="v2" />
                 </Show>
