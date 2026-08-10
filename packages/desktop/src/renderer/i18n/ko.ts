@@ -24,4 +24,10 @@ export const dict = {
     "CLI가 {{path}}에 설치되었습니다\n\n터미널을 다시 시작하여 'opencode' 명령을 사용하세요.",
   "desktop.cli.failed.title": "설치 실패",
   "desktop.cli.failed.message": "CLI 설치 실패: {{error}}",
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }

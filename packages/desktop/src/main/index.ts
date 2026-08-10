@@ -45,6 +45,7 @@ import {
 import { createWslServersController } from "./wsl/servers"
 import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
+import { createAuthService, routeUrl } from "./auth"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
@@ -164,6 +165,7 @@ const main = Effect.gen(function* () {
       },
     },
   )
+  const auth = createAuthService()
   const stopSidecars = async () => {
     await killSidecar()
     wslServers.stopAll()
@@ -203,10 +205,13 @@ const main = Effect.gen(function* () {
   const shellEnv = preferAppEnv(app.getPath("userData"))
 
   app.on("second-instance", (_event: Event, argv: string[]) => {
-    const urls = argv.filter((arg: string) => arg.startsWith("opencode://"))
-    if (urls.length) {
-      logger.log("deep link received via second-instance", { urls })
-      emitDeepLinks(urls)
+    const itfsUrls = argv.filter((arg: string) => arg.startsWith("itfs://"))
+    if (itfsUrls.length) {
+      const deepLinks = itfsUrls.filter((url) => !routeUrl(url, auth))
+      if (deepLinks.length) {
+        logger.log("deep link received via second-instance", { urls: deepLinks })
+        emitDeepLinks(deepLinks)
+      }
     }
     const win = getLastFocusedWindow()
     if (win) {
@@ -217,6 +222,11 @@ const main = Effect.gen(function* () {
 
   app.on("open-url", (event: Event, url: string) => {
     event.preventDefault()
+    if (!url.startsWith("itfs://")) return
+    if (routeUrl(url, auth)) {
+      logger.log("auth callback received via open-url", { url })
+      return
+    }
     logger.log("deep link received via open-url", { url })
     emitDeepLinks([url])
   })
@@ -268,7 +278,7 @@ const main = Effect.gen(function* () {
       }),
     ),
   )
-  app.setAsDefaultProtocolClient("opencode")
+  app.setAsDefaultProtocolClient("itfs")
   registerRendererProtocol()
   setDockIcon()
   const updater = setupAutoUpdater(stopSidecars)
@@ -309,6 +319,10 @@ const main = Effect.gen(function* () {
     recordFatalRendererError: (error) => writeLog("renderer", "fatal renderer error", { ...error }, "error"),
     setNativeTranslations: (bundle) => {
       if (setNativeTranslations(bundle)) createMenu(menuDeps)
+    },
+    auth: {
+      service: auth,
+      routeUrl: (url: string) => routeUrl(url, auth),
     },
   })
   registerWslIpcHandlers(wslServers)

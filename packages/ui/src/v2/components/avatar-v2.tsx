@@ -17,7 +17,7 @@ export interface AvatarProps extends ComponentProps<"div"> {
   src?: string
   background?: string
   foreground?: string
-  size?: "small" | "normal" | "large"
+  size?: "small" | "normal" | "large" | "x-large" | "2x-large"
   kind?: "user" | "org"
 }
 

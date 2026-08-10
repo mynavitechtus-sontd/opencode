@@ -21,4 +21,10 @@ export const dict = {
   "desktop.cli.installed.message": "Đã cài đặt CLI vào {{path}}\n\nKhởi động lại terminal để sử dụng lệnh 'opencode'.",
   "desktop.cli.failed.title": "Cài đặt không thành công",
   "desktop.cli.failed.message": "Không cài đặt được CLI: {{error}}",
+  "desktop.auth.signIn.title": "Đăng nhập",
+  "desktop.auth.signIn.withGoogle": "Tiếp tục với Google",
+  "desktop.auth.signIn.error.default": "Đăng nhập thất bại. Vui lòng thử lại.",
+  "desktop.auth.signIn.error.encryption": "Hệ thống của bạn không hỗ trợ lưu trữ bảo mật.",
+  "desktop.auth.userMenu.logout": "Đăng xuất",
+
 }

@@ -46,14 +46,29 @@
   --avatar-radius: 4px;
 }
 
+[data-component="avatar-v2"][data-size="small"] {
+  width: 16px;
+  height: 16px;
+}
+
 [data-component="avatar-v2"][data-size="normal"] {
   width: 20px;
   height: 20px;
 }
 
-[data-component="avatar-v2"][data-size="small"] {
-  width: 16px;
-  height: 16px;
+[data-component="avatar-v2"][data-size="large"] {
+  width: 28px;
+  height: 28px;
+}
+
+[data-component="avatar-v2"][data-size="x-large"] {
+  width: 28px;
+  height: 28px;
+}
+
+[data-component="avatar-v2"][data-size="2x-large"] {
+  width: 40px;
+  height: 40px;
 }
 
 [data-component="avatar-v2"] [data-slot="avatar-image"] {
