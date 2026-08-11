@@ -1,13 +1,34 @@
 import { createServer } from "node:http"
-import type { ItfsTokenStore } from "./itfs-token-store"
+import { loadAndDecrypt } from "./auth"
 
-export function startItfsTokenServer(tokenStore: ItfsTokenStore): Promise<number> {
+async function refreshToken(): Promise<string | null> {
+  const refreshToken = loadAndDecrypt("refresh_token")
+  if (!refreshToken) return null
+  const deviceId = (await import("./auth")).getDeviceId()
+  const baseUrl = process.env.ITFS_API_URL ?? "http://localhost:3000"
+  try {
+    const res = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${refreshToken}` },
+      body: JSON.stringify({ device_id: deviceId }),
+    })
+    if (!res.ok) return null
+    const json = await res.json() as { access_token: string; refresh_token: string }
+    const { encryptAndSave } = await import("./auth")
+    encryptAndSave("access_token", json.access_token)
+    encryptAndSave("refresh_token", json.refresh_token)
+    return json.access_token
+  } catch {
+    return null
+  }
+}
+
+export function startItfsTokenServer(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer(async (_req, res) => {
-      let token = await tokenStore.getAccessToken()
+      let token = loadAndDecrypt("access_token")
       if (!token) {
-        const refreshed = await tokenStore.refreshAccessToken()
-        if (refreshed) token = await tokenStore.getAccessToken()
+        token = await refreshToken()
       }
       if (!token) {
         res.writeHead(404, { "Content-Type": "application/json" })

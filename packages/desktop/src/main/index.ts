@@ -49,7 +49,6 @@ import { createAuthService, routeUrl } from "./auth"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startItfsTokenServer } from "./itfs-token-server"
-import { ItfsTokenStore } from "./itfs-token-store"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 
@@ -346,9 +345,8 @@ const main = Effect.gen(function* () {
     ensureLoopbackNoProxy()
     useEnvProxy()
 
-    const itfsTokenStore = new ItfsTokenStore()
     const itfsTokenPort = yield* Effect.promise(
-      () => startItfsTokenServer(itfsTokenStore).then((port) => {
+      () => startItfsTokenServer().then((port) => {
         process.env.ITFS_TOKEN_PORT = String(port)
         return port
       }),

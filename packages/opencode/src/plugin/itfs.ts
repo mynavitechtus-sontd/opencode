@@ -77,6 +77,9 @@ function requireNoInterview() {
 
 function handleErr(err: unknown) {
   if (err instanceof Error) return result({ ok: false, error: { code: "NETWORK_ERROR", message: err.message } })
+  if (typeof err === "object" && err !== null && "code" in err && "message" in err) {
+    return result({ ok: false, error: { code: String(err.code), message: String(err.message) } })
+  }
   return result({ ok: false, error: { code: "UNKNOWN", message: String(err) } })
 }
 
