@@ -13,6 +13,10 @@ import {
   createItfsReset,
 } from "../src/tools.js";
 
+function mockGetSkillName() {
+  return (id: number) => `Skill-${id}`;
+}
+
 function mockClient(overrides: {
   get?: ReturnType<typeof mock>;
   post?: ReturnType<typeof mock>;
@@ -92,7 +96,7 @@ describe("itfs_interview_start", () => {
     const session = new SessionStateManager();
     session.setInterview("existing-uuid");
     const client = mockClient();
-    const tool = createItfsInterviewStart(client, session);
+    const tool = createItfsInterviewStart(client, session, mockGetSkillName());
 
     const result = await tool({ skill_id: 1, target_level: "Middle 1" });
 
@@ -107,7 +111,7 @@ describe("itfs_interview_start", () => {
     const session = new SessionStateManager();
     const post = mock(async () => ({ ok: true, data: { uuid: "new-uuid" } }));
     const client = mockClient({ post });
-    const tool = createItfsInterviewStart(client, session);
+    const tool = createItfsInterviewStart(client, session, mockGetSkillName());
 
     const result = await tool({ skill_id: 1, target_level: "Middle 1" });
 
@@ -127,7 +131,7 @@ describe("itfs_interview_start", () => {
       error: { code: "SERVER_ERROR" as const, message: "fail", status: 500, recoverable: false },
     }));
     const client = mockClient({ post });
-    const tool = createItfsInterviewStart(client, session);
+    const tool = createItfsInterviewStart(client, session, mockGetSkillName());
 
     const result = await tool({ skill_id: 1, target_level: "Middle 1" });
 
@@ -364,7 +368,7 @@ describe("itfs_reset", () => {
     const client = mockClient();
     const tool = createItfsReset(client, session);
 
-    const result = await tool();
+    const result = await tool({ error_reason: "stuck" });
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("INVALID_STATE");
@@ -377,11 +381,11 @@ describe("itfs_reset", () => {
     const client = mockClient({ patch });
     const tool = createItfsReset(client, session);
 
-    const result = await tool();
+    const result = await tool({ error_reason: "timeout" });
 
     expect(patch).toHaveBeenCalledWith(
       "/api/v1/interviews/interview-uuid",
-      { status: "error" },
+      { status: "error", error_reason: "timeout" },
       "interview",
     );
     expect(result.ok).toBe(true);

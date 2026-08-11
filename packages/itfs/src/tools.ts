@@ -95,10 +95,19 @@ export function createItfsUpdateProfile(client: ApiClient) {
 export function createItfsInterviewStart(
   client: ApiClient,
   session: SessionStateManager,
+  getSkillName: (id: number) => string | undefined,
 ) {
   return async (input: InterviewStartInput): Promise<ToolResult<InterviewStartOutput>> => {
     const stateErr = checkNoInterview(session);
     if (stateErr) return stateErr;
+
+    const skillName = getSkillName(input.skill_id);
+    if (!skillName) {
+      return {
+        ok: false,
+        error: { code: "VALIDATION_ERROR", message: `Unknown skill id: ${input.skill_id}`, recoverable: true },
+      };
+    }
 
     const result = await client.post<{ uuid: string }>(
       "/api/v1/interviews",
@@ -110,11 +119,7 @@ export function createItfsInterviewStart(
     session.setInterview(result.data.uuid);
     return {
       ok: true,
-      data: {
-        // TODO: map skill_id to skill_name; backend does not return skill_name
-        skill_name: input.skill_id as unknown as string,
-        target_level: input.target_level,
-      },
+      data: { skill_name: skillName, target_level: input.target_level },
     };
   };
 }
@@ -269,13 +274,13 @@ export function createItfsReset(
   client: ApiClient,
   session: SessionStateManager,
 ) {
-  return async (): Promise<ToolResult<ResetOutput>> => {
+  return async (input: ResetInput): Promise<ToolResult<ResetOutput>> => {
     const stateErr = checkInterview(session);
     if (stateErr) return stateErr;
 
     const result = await client.patch<{ status: string }>(
       `/api/v1/interviews/${session.getState().interviewUuid}`,
-      { status: "error" },
+      { status: "error", error_reason: input.error_reason },
       "interview",
     );
     if (!result.ok) return result;

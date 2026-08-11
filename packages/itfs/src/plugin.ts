@@ -9,17 +9,20 @@ import type { InteractionEvent } from "./interaction-log.js";
 
 export type ItfsPluginDeps = {
   client: ApiClient;
+  skillNames: Record<number, string>;
 };
 
 export function createItfsPlugin(deps: ItfsPluginDeps) {
   const session = new SessionStateManager();
-  const { client } = deps;
+  const { client, skillNames } = deps;
+
+  const getSkillName = (id: number) => skillNames[id];
 
   return {
     tools: {
       itfs_get_profile: createItfsGetProfile(client),
       itfs_update_profile: createItfsUpdateProfile(client),
-      itfs_interview_start: createItfsInterviewStart(client, session),
+      itfs_interview_start: createItfsInterviewStart(client, session, getSkillName),
       itfs_ask_question: createItfsAskQuestion(client, session),
       itfs_record_answer: createItfsRecordAnswer(client, session),
       itfs_score_answer: createItfsScoreAnswer(client, session),
