@@ -26,22 +26,23 @@ export class ApiClient {
 
   constructor(private getToken: () => Promise<string | null>) {}
 
-  async get<T>(path: string): Promise<ApiResult<T>> {
-    return this.request<T>("GET", path);
+  async get<T>(path: string, resourceKey?: string): Promise<ApiResult<T>> {
+    return this.request<T>("GET", path, undefined, resourceKey);
   }
 
-  async post<T>(path: string, body: Record<string, unknown>): Promise<ApiResult<T>> {
-    return this.request<T>("POST", path, body);
+  async post<T>(path: string, body: Record<string, unknown>, resourceKey?: string): Promise<ApiResult<T>> {
+    return this.request<T>("POST", path, body, resourceKey);
   }
 
-  async patch<T>(path: string, body: Record<string, unknown>): Promise<ApiResult<T>> {
-    return this.request<T>("PATCH", path, body);
+  async patch<T>(path: string, body: Record<string, unknown>, resourceKey?: string): Promise<ApiResult<T>> {
+    return this.request<T>("PATCH", path, body, resourceKey);
   }
 
   private async request<T>(
     method: string,
     path: string,
-    body?: Record<string, unknown>,
+    body: Record<string, unknown> | undefined,
+    resourceKey: string | undefined,
     isRetry = false,
   ): Promise<ApiResult<T>> {
     const token = await this.getToken();
@@ -52,13 +53,14 @@ export class ApiClient {
       };
     }
 
-    return this.fetchWithRetry(method, path, body, token, isRetry);
+    return this.fetchWithRetry(method, path, body, resourceKey, token, isRetry);
   }
 
   private async fetchWithRetry<T>(
     method: string,
     path: string,
     body: Record<string, unknown> | undefined,
+    resourceKey: string | undefined,
     token: string,
     isRetry: boolean,
     attempt = 0,
@@ -82,7 +84,7 @@ export class ApiClient {
         if (res.status === 401 && !isRetry) {
           const refreshed = await this.tryRefreshToken();
           if (refreshed) {
-            return this.request<T>(method, path, body, true);
+            return this.request<T>(method, path, body, resourceKey, true);
           }
           return { ok: false, error: { code: "AUTH_EXPIRED", message: "Token refresh failed", status: 401, recoverable: true } };
         }
@@ -91,12 +93,13 @@ export class ApiClient {
         return { ok: false, error: errorFromStatus(res.status, json) };
       }
 
-      const json: T = await res.json();
-      return { ok: true, data: json };
+      const json = await res.json();
+      const data = resourceKey ? (json as Record<string, unknown>)[resourceKey] as T : json as T;
+      return { ok: true, data };
     } catch (err) {
       if (attempt < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, backoff[attempt]));
-        return this.fetchWithRetry<T>(method, path, body, token, isRetry, attempt + 1);
+        return this.fetchWithRetry<T>(method, path, body, resourceKey, token, isRetry, attempt + 1);
       }
       return {
         ok: false,
