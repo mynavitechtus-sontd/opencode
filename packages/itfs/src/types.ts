@@ -146,3 +146,11 @@ export type CancelInterviewOutput = { status: "canceled" };
 
 export type ResetInput = { error_reason: string };
 export type ResetOutput = { status: "error" };
+
+export type Skill = {
+  id: number;
+  name: string;
+};
+
+export type GetSkillsInput = void;
+export type GetSkillsOutput = Skill[];

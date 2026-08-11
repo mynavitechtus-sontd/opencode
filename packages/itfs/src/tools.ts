@@ -21,6 +21,7 @@ import type {
   UpdateProfileInput,
   UpdateProfileOutput,
   UserProfile,
+  Skill,
 } from "./types.js";
 
 function checkNoInterview(session: SessionStateManager): ToolResult<never> | null {
@@ -287,5 +288,12 @@ export function createItfsReset(
 
     session.clear();
     return { ok: true, data: { status: "error" } };
+  };
+}
+
+export function createItfsGetSkills(client: ApiClient) {
+  return async (): Promise<ToolResult<Skill[]>> => {
+    const result = await client.get<Skill[]>("/api/v1/skills", "skills");
+    return result;
   };
 }

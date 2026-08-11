@@ -8,7 +8,7 @@ export async function registerItfsTools(
   const client = new ApiClient(() => tokenStore.getAccessToken())
   client.tryRefreshToken = () => tokenStore.refreshAccessToken()
 
-  const plugin = createItfsPlugin({ client, skillNames: {} })
+  const plugin = createItfsPlugin({ client })
 
   await opencode.tools.register(plugin.tools)
 
