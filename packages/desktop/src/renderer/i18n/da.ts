@@ -28,4 +28,11 @@ export const dict = {
 
   "desktop.error.dev.rootNotFound":
     "Rodelement ikke fundet. Har du glemt at tilføje det til din index.html? Eller måske er id-attributten stavet forkert?",
+
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }

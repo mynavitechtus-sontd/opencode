@@ -87,7 +87,7 @@ const getBase = (appId: string): Configuration => ({
   },
   protocols: {
     name: "OpenCode",
-    schemes: ["opencode"],
+    schemes: ["itfs"],
   },
   win: {
     icon: `resources/icons/icon.ico`,
@@ -137,7 +137,7 @@ function getConfig() {
         ...base,
         appId,
         productName: "OpenCode Beta",
-        protocols: { name: "OpenCode Beta", schemes: ["opencode"] },
+        protocols: { name: "OpenCode Beta", schemes: ["itfs"] },
         publish: { provider: "github", owner: "anomalyco", repo: "opencode-beta", channel: "latest" },
         deb: { fpm: [metainfoFpm(appId)] },
         rpm: { packageName: "opencode-beta", fpm: [metainfoFpm(appId)] },
@@ -148,7 +148,7 @@ function getConfig() {
         ...base,
         appId,
         productName: "OpenCode",
-        protocols: { name: "OpenCode", schemes: ["opencode"] },
+        protocols: { name: "OpenCode", schemes: ["itfs"] },
         publish: { provider: "github", owner: "anomalyco", repo: "opencode", channel: "latest" },
         deb: { fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
         rpm: { packageName: "opencode", fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },

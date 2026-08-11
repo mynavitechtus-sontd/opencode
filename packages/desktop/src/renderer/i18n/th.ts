@@ -26,4 +26,11 @@ export const dict = {
   "desktop.cli.failed.message": "ไม่สามารถติดตั้ง CLI ได้: {{error}}",
 
   "desktop.error.dev.rootNotFound": "ไม่พบองค์ประกอบรูท คุณลืมเพิ่มใน index.html หรือบางทีแอตทริบิวต์ id อาจสะกดผิด?",
+
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }

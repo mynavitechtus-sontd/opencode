@@ -27,4 +27,11 @@ export const dict = {
 
   "desktop.error.dev.rootNotFound":
     "루트 요소를 찾을 수 없습니다. index.html에 추가하는 것을 잊으셨나요? 또는 id 속성의 철자가 틀렸을 수 있습니다.",
+
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }

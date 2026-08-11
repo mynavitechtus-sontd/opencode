@@ -24,4 +24,11 @@ export const dict = {
 
   "desktop.error.dev.rootNotFound":
     "Không tìm thấy phần tử gốc. Bạn đã quên thêm nó vào index.html của mình? Hoặc có thể thuộc tính id bị sai chính tả?",
+
+  "desktop.auth.signIn.title": "Đăng nhập",
+  "desktop.auth.signIn.withGoogle": "Tiếp tục với Google",
+  "desktop.auth.signIn.error.default": "Đăng nhập thất bại. Vui lòng thử lại.",
+  "desktop.auth.signIn.error.encryption": "Hệ thống của bạn không hỗ trợ lưu trữ bảo mật.",
+  "desktop.auth.userMenu.logout": "Đăng xuất",
+
 }

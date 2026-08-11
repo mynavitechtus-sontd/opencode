@@ -25,4 +25,11 @@ export const dict = {
 
   "desktop.error.dev.rootNotFound":
     "Root-element niet gevonden. Ben je vergeten het toe te voegen aan je index.html? Of is het id-attribuut misschien verkeerd gespeld?",
+
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }

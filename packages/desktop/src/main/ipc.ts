@@ -6,6 +6,7 @@ import type { IpcMainEvent, IpcMainInvokeEvent } from "electron"
 import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
 import { parseDesktopNativeBundle, type DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
 
+import type { AuthService, AuthState } from "./auth"
 import type { FatalRendererError, ServerReadyData, TitlebarTheme } from "../preload/types"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { setForceFocus } from "./debug"
@@ -52,6 +53,10 @@ type Deps = {
   exportDebugLogs: () => Promise<string>
   recordFatalRendererError: (error: FatalRendererError) => Promise<void> | void
   setNativeTranslations: (bundle: DesktopNativeBundle) => void
+  auth: {
+    service: AuthService
+    routeUrl: (url: string) => boolean
+  }
 }
 
 export function registerIpcHandlers(deps: Deps) {
@@ -295,6 +300,32 @@ export function registerIpcHandlers(deps: Deps) {
     runDesktopMenuAction(BrowserWindow.fromWebContents(event.sender), action, {
       checkForUpdates: () => void deps.showUpdater(),
       relaunch: deps.relaunch,
+    })
+  })
+
+  const authSubscriptions = new Map<number, () => void>()
+  ipcMain.handle("auth:get-state", () => deps.auth.service.loadSessionOnStartup())
+  ipcMain.handle("auth:sign-in", () => {
+    deps.auth.service.beginGoogleSignIn()
+  })
+  ipcMain.handle("auth:sign-out", () => deps.auth.service.signOut())
+  ipcMain.handle("auth:handle-callback", (_event: IpcMainInvokeEvent, url: string) =>
+    deps.auth.service.handleAuthCallback(url),
+  )
+  ipcMain.handle("auth:subscribe", (event: IpcMainInvokeEvent) => {
+    const id = event.sender.id
+    authSubscriptions.get(id)?.()
+    const unsub = deps.auth.service.subscribe((state: AuthState) => {
+      if (event.sender.isDestroyed()) {
+        authSubscriptions.delete(id)
+        return
+      }
+      event.sender.send("auth:state-changed", state)
+    })
+    authSubscriptions.set(id, unsub)
+    event.sender.once("destroyed", () => {
+      authSubscriptions.delete(id)
+      unsub()
     })
   })
 }

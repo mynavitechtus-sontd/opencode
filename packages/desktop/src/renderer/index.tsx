@@ -25,6 +25,8 @@ import pkg from "../../package.json"
 import { t } from "./i18n"
 import { initializationData } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
+import { LoginScreen } from "./login"
+import { DesktopUserMenu } from "./user-menu"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
@@ -348,6 +350,8 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
   // Fetch sidecar credentials (available immediately, before health check)
   const [sidecar] = createResource(() => window.api.awaitInitialization())
 
+  const [authLoading, { refetch: refetchAuth }] = createResource(() => window.api.auth.getState())
+  onCleanup(window.api.auth.subscribe(() => refetchAuth()))
   const [defaultServer] = createResource(() => platform.getDefaultServer?.())
   const [locale] = createResource(loadLocale)
   const router = (props: BaseRouterProps) => (
@@ -370,14 +374,18 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
       }
     })
 
-    return null
+    return (
+      <>
+        <DesktopUserMenu />
+      </>
+    )
   }
 
   function App() {
     const wslServers = useWslServers()
     const language = useLanguage()
     const ready = createMemo(
-      () => !defaultServer.loading && !sidecar.loading && !locale.loading && !wslServers.isLoading,
+      () => !defaultServer.loading && !sidecar.loading && !locale.loading && !authLoading.loading && !wslServers.isLoading,
     )
     const servers = createMemo(() => {
       const data = initializationData(sidecar)
@@ -430,7 +438,11 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
         locale={locale.latest}
         onNativeTranslations={(bundle) => void window.api.setNativeTranslations(bundle).catch(() => undefined)}
       >
-        <Show when={true}>{(_) => <App />}</Show>
+        <Show when={!authLoading.loading} fallback={<LoadingSplash />}>
+          <Show when={authLoading.latest?.status === "signedIn"} fallback={<LoginScreen />}>
+            <App />
+          </Show>
+        </Show>
       </AppBaseProviders>
     </PlatformProvider>
   )

@@ -27,4 +27,11 @@ export const dict = {
 
   "desktop.error.dev.rootNotFound":
     "Корневой элемент не найден. Вы забыли добавить его в index.html? Или, может быть, атрибут id был написан неправильно?",
+
+  "desktop.auth.signIn.title": "Sign in",
+  "desktop.auth.signIn.withGoogle": "Continue with Google",
+  "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
+  "desktop.auth.signIn.error.encryption": "Your system does not support secure storage.",
+  "desktop.auth.userMenu.logout": "Log out",
+
 }
