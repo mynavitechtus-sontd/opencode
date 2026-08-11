@@ -2,6 +2,7 @@ import { describe, expect, test, mock } from "bun:test";
 import { SessionStateManager } from "../src/session.js";
 import {
   createItfsGetProfile,
+  createItfsGetSkills,
   createItfsUpdateProfile,
   createItfsInterviewStart,
   createItfsAskQuestion,
@@ -28,6 +29,43 @@ function mockClient(overrides: {
     patch: overrides.patch ?? mock(async () => ({ ok: true, data: {} })),
   };
 }
+
+describe("itfs_get_skills", () => {
+  test("calls GET /api/v1/skills with skills resourceKey", async () => {
+    const get = mock(async () => ({
+      ok: true,
+      data: [
+        { id: 1, name: "Programming & Frameworks" },
+        { id: 2, name: "Software Design & Architecture" },
+      ],
+    }));
+    const client = mockClient({ get });
+    const tool = createItfsGetSkills(client);
+
+    const result = await tool();
+
+    expect(get).toHaveBeenCalledWith("/api/v1/skills", "skills");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].name).toBe("Programming & Frameworks");
+    }
+  });
+
+  test("passes through HTTP errors", async () => {
+    const get = mock(async () => ({
+      ok: false,
+      error: { code: "NETWORK_ERROR" as const, message: "fail", status: 0, recoverable: false },
+    }));
+    const client = mockClient({ get });
+    const tool = createItfsGetSkills(client);
+
+    const result = await tool();
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("NETWORK_ERROR");
+  });
+});
 
 describe("itfs_get_profile", () => {
   test("calls GET /api/v1/auth/me with user resourceKey and unwraps correctly", async () => {
