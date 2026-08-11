@@ -1,6 +1,15 @@
 import { createServer } from "node:http"
 import { loadAndDecrypt } from "./auth"
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString())
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
 async function refreshToken(): Promise<string | null> {
   const refreshToken = loadAndDecrypt("refresh_token")
   if (!refreshToken) return null
@@ -13,7 +22,7 @@ async function refreshToken(): Promise<string | null> {
       body: JSON.stringify({ device_id: deviceId }),
     })
     if (!res.ok) return null
-    const json = await res.json() as { access_token: string; refresh_token: string }
+    const json = (await res.json()) as { access_token: string; refresh_token: string }
     const { encryptAndSave } = await import("./auth")
     encryptAndSave("access_token", json.access_token)
     encryptAndSave("refresh_token", json.refresh_token)
@@ -27,6 +36,9 @@ export function startItfsTokenServer(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer(async (_req, res) => {
       let token = loadAndDecrypt("access_token")
+      if (token && isTokenExpired(token)) {
+        token = await refreshToken()
+      }
       if (!token) {
         token = await refreshToken()
       }

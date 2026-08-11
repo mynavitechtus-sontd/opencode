@@ -35,9 +35,7 @@ async function apiRequest<T>(
 
     if (res.status === 401) {
       const newToken = await getAccessToken()
-      if (newToken && newToken !== token) {
-        return apiRequest<T>(method, path, body)
-      }
+      if (newToken) return apiRequest<T>(method, path, body)
       throw { code: "AUTH_EXPIRED", message: "Token expired and refresh failed" }
     }
 
