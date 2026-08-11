@@ -348,7 +348,7 @@ const main = Effect.gen(function* () {
 
     const itfsTokenStore = new ItfsTokenStore()
     const itfsTokenPort = yield* Effect.promise(
-      () => startItfsTokenServer(() => itfsTokenStore.getAccessToken()).then((port) => {
+      () => startItfsTokenServer(itfsTokenStore).then((port) => {
         process.env.ITFS_TOKEN_PORT = String(port)
         return port
       }),

@@ -17,16 +17,6 @@ async function getAccessToken(): Promise<string | null> {
   return json.token
 }
 
-async function refreshToken(): Promise<boolean> {
-  const token = await getAccessToken()
-  if (!token) return false
-  const res = await fetch(`${ITFS_API_URL}/api/v1/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-  })
-  return res.ok
-}
-
 async function apiRequest<T>(
   method: string,
   path: string,
@@ -44,9 +34,11 @@ async function apiRequest<T>(
     })
 
     if (res.status === 401) {
-      const refreshed = await refreshToken()
-      if (refreshed) return apiRequest<T>(method, path, body)
-      throw { code: "AUTH_EXPIRED", message: "Token refresh failed" }
+      const newToken = await getAccessToken()
+      if (newToken && newToken !== token) {
+        return apiRequest<T>(method, path, body)
+      }
+      throw { code: "AUTH_EXPIRED", message: "Token expired and refresh failed" }
     }
 
     if (!res.ok) {
