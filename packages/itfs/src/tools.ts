@@ -142,3 +142,145 @@ export function createItfsAskQuestion(
     return { ok: true, data: { qa_uuid: result.data.uuid } };
   };
 }
+
+export function createItfsRecordAnswer(
+  client: ApiClient,
+  session: SessionStateManager,
+) {
+  return async (input: RecordAnswerInput): Promise<ToolResult<RecordAnswerOutput>> => {
+    const stateErr = checkQA(session);
+    if (stateErr) return stateErr;
+
+    const result = await client.patch<{ uuid: string; answered_at: string }>(
+      `/api/v1/qa_histories/${session.getState().currentQaUuid}`,
+      { answer: input.answer },
+      "qa_history",
+    );
+    if (!result.ok) return result;
+
+    return {
+      ok: true,
+      data: {
+        qa_uuid: result.data.uuid,
+        answered_at: result.data.answered_at,
+      },
+    };
+  };
+}
+
+export function createItfsScoreAnswer(
+  client: ApiClient,
+  session: SessionStateManager,
+) {
+  return async (input: ScoreAnswerInput): Promise<ToolResult<ScoreAnswerOutput>> => {
+    const stateErr = checkQA(session);
+    if (stateErr) return stateErr;
+
+    const body: Record<string, unknown> = {
+      score: input.score,
+      meet_level: input.meet_level,
+      reason: input.reason,
+      evaluation: input.reason,
+    };
+    if (input.tokens_count !== undefined) {
+      body.tokens_count = input.tokens_count;
+    }
+
+    const result = await client.patch<{ uuid: string }>(
+      `/api/v1/qa_histories/${session.getState().currentQaUuid}`,
+      body,
+      "qa_history",
+    );
+    if (!result.ok) return result;
+
+    session.setQA(null);
+    return { ok: true, data: { qa_uuid: result.data.uuid } };
+  };
+}
+
+export function createItfsRecordSkip(
+  client: ApiClient,
+  session: SessionStateManager,
+) {
+  return async (): Promise<ToolResult<RecordSkipOutput>> => {
+    const stateErr = checkQA(session);
+    if (stateErr) return stateErr;
+
+    const result = await client.patch<{ uuid: string }>(
+      `/api/v1/qa_histories/${session.getState().currentQaUuid}`,
+      { score: 0, meet_level: "skip", reason: "Skipped", evaluation: "Skipped" },
+      "qa_history",
+    );
+    if (!result.ok) return result;
+
+    session.setQA(null);
+    return { ok: true, data: { qa_uuid: result.data.uuid } };
+  };
+}
+
+export function createItfsLockSkill(
+  client: ApiClient,
+  session: SessionStateManager,
+) {
+  return async (input: LockSkillInput): Promise<ToolResult<LockSkillOutput>> => {
+    const stateErr = checkInterview(session);
+    if (stateErr) return stateErr;
+
+    const result = await client.patch<{ status: string; raw_level_status: string }>(
+      `/api/v1/interviews/${session.getState().interviewUuid}`,
+      { status: "completed", raw_level_status: input.raw_level_status },
+      "interview",
+    );
+    if (!result.ok) return result;
+
+    session.clear();
+    return {
+      ok: true,
+      data: {
+        skill_name: input.skill_name,
+        level: input.level,
+        raw_level_status: result.data.raw_level_status,
+      },
+    };
+  };
+}
+
+export function createItfsCancelInterview(
+  client: ApiClient,
+  session: SessionStateManager,
+) {
+  return async (): Promise<ToolResult<CancelInterviewOutput>> => {
+    const stateErr = checkInterview(session);
+    if (stateErr) return stateErr;
+
+    const result = await client.patch<{ status: string }>(
+      `/api/v1/interviews/${session.getState().interviewUuid}`,
+      { status: "canceled" },
+      "interview",
+    );
+    if (!result.ok) return result;
+
+    session.clear();
+    return { ok: true, data: { status: "canceled" } };
+  };
+}
+
+export function createItfsReset(
+  client: ApiClient,
+  session: SessionStateManager,
+) {
+  return async (): Promise<ToolResult<ResetOutput>> => {
+    const stateErr = checkInterview(session);
+    if (stateErr) return stateErr;
+
+    const result = await client.patch<{ status: string }>(
+      `/api/v1/interviews/${session.getState().interviewUuid}`,
+      { status: "error" },
+      "interview",
+    );
+    if (!result.ok) return result;
+
+    session.clear();
+    return { ok: true, data: { status: "error" } };
+  };
+}
