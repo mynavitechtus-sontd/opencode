@@ -251,14 +251,16 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
       }),
 
       itfs_cancel_interview: tool({
-        description: "Cancel the current interview (user-initiated) and reset interview session",
-        args: {},
-        execute: async () => {
+        description: "Cancel an interview; omit interview_uuid to cancel the active session",
+        args: { interview_uuid: z.string().optional() },
+        execute: async (args) => {
           try {
-            const iUuid = requireInterview()
+            const iUuid = args.interview_uuid ?? requireInterview()
             await apiRequest<unknown>("PATCH", `/api/v1/interviews/${iUuid}`, { status: "canceled" })
-            interviewUuid = null
-            currentQaUuid = null
+            if (iUuid === interviewUuid) {
+              interviewUuid = null
+              currentQaUuid = null
+            }
             return result({ ok: true, data: { status: "canceled" } })
           } catch (e) { return handleErr(e) }
         },
