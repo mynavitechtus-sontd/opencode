@@ -216,10 +216,11 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         execute: async () => {
           try {
             const qUuid = requireQA()
-            const data = await apiRequest<{ qa_history: { uuid: string } }>(
-              "PATCH", `/api/v1/qa_histories/${qUuid}`,
-              { score: 0, meet_level: "skip", reason: "Skipped", evaluation: "Skipped" },
-            )
+            const data = await apiRequest<{ qa_history: { uuid: string } }>("PATCH", `/api/v1/qa_histories/${qUuid}`, {
+              answered_at: new Date().toISOString(),
+              evaluation: "(Skipped)",
+              reason: "(Skipped)",
+            })
             currentQaUuid = null
             return result({ ok: true, data: { qa_uuid: data.qa_history.uuid } })
           } catch (e) { return handleErr(e) }
