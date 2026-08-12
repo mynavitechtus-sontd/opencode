@@ -54,10 +54,6 @@ async function apiRequest<T>(
   }
 }
 
-function unwrap<T>(response: Record<string, T>, key: string): T {
-  return (response[key] ?? response) as T
-}
-
 let interviewUuid: string | null = null
 let currentQaUuid: string | null = null
 
@@ -125,23 +121,23 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         },
       }),
 
-      itfs_interview_start: tool({
-        description: "Start a new ITFS interview for one skill",
+      itfs_start_interview: tool({
+        description: "Start a new ITFS interview for a specific skill",
         args: {
-          skill_id: z.number().int().positive(),
-          target_level: z.string(),
+          skill_id: z.union([z.number().int().positive(), z.string()]),
+          target_level: z.union([z.string(), z.number()]),
         },
         execute: async (args) => {
           try {
             requireNoInterview()
             const data = await apiRequest<{ interview: { uuid: string } }>("POST", "/api/v1/interviews", {
               skill_id: args.skill_id,
-              target_level: args.target_level,
+              target_level: String(args.target_level),
             })
             interviewUuid = data.interview.uuid
             return result({
               ok: true,
-              data: { skill_name: `skill-${args.skill_id}`, target_level: args.target_level },
+              data: { skill_name: `skill-${args.skill_id}`, target_level: String(args.target_level) },
             })
           } catch (e) { return handleErr(e) }
         },
@@ -162,6 +158,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
               question: args.question,
               question_category: args.question_category,
               interview_uuid: iUuid,
+              questioned_at: new Date().toISOString(),
             })
             currentQaUuid = data.qa_history.uuid
             return result({ ok: true, data: { qa_uuid: data.qa_history.uuid } })
@@ -176,7 +173,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
           try {
             const qUuid = requireQA()
             const data = await apiRequest<{ qa_history: { uuid: string; answered_at: string } }>(
-              "PATCH", `/api/v1/qa_histories/${qUuid}`, { answer: args.answer },
+              "PATCH", `/api/v1/qa_histories/${qUuid}`, { answer: args.answer, answered_at: new Date().toISOString() },
             )
             return result({
               ok: true,
@@ -229,8 +226,8 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         },
       }),
 
-      itfs_lock_skill: tool({
-        description: "Finalize a skill assessment and complete the interview",
+      itfs_complete_interview: tool({
+        description: "Finalize the interview, lock the skill level, and reset interview session",
         args: {
           skill_name: z.string(),
           level: z.string(),
@@ -253,7 +250,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
       }),
 
       itfs_cancel_interview: tool({
-        description: "Cancel the current interview (user-initiated)",
+        description: "Cancel the current interview (user-initiated) and reset interview session",
         args: {},
         execute: async () => {
           try {
@@ -266,8 +263,8 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         },
       }),
 
-      itfs_reset: tool({
-        description: "Reset interview due to stuck state or error",
+      itfs_reset_interview: tool({
+        description: "Reset a stuck interview session, setting status to error and clearing session state",
         args: { error_reason: z.string() },
         execute: async (args) => {
           try {

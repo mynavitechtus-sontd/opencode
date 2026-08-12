@@ -4,7 +4,7 @@ import { loadAndDecrypt } from "./auth"
 function isTokenExpired(token: string): boolean {
   try {
     const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString())
-    return payload.exp * 1000 < Date.now()
+    return payload.exp * 1000 < Date.now() + 2 * 60 * 1000
   } catch {
     return true
   }
