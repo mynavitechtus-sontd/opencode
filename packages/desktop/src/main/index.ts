@@ -48,6 +48,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { createAuthService, routeUrl } from "./auth"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
+import { startItfsTokenServer } from "./itfs-token-server"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 
@@ -343,6 +344,15 @@ const main = Effect.gen(function* () {
 
     ensureLoopbackNoProxy()
     useEnvProxy()
+
+    const itfsTokenPort = yield* Effect.promise(
+      () => startItfsTokenServer().then((port) => {
+        process.env.ITFS_TOKEN_PORT = String(port)
+        return port
+      }),
+    )
+    logger.log("itfs token server started", { port: itfsTokenPort })
+    process.env.ITFS_API_URL = "http://localhost:3000"
 
     if (SIDECAR_VERSION === "v2") {
       logger.log("spawning v2 sidecar")
