@@ -42,8 +42,8 @@ the window. No opencode event-manifest or SDK changes are needed.
                                  │ HTTP loopback (127.0.0.1)
                                  ▼
 ┌──────────────────────────── Electron main ────────────────────────────────────────┐
-│  itfs-window-server.ts   HTTP server; port → process.env.ITFS_WINDOW_PORT         │
-│  itfs-window.ts          open/close BrowserWindow 320×600, alwaysOnTop,           │
+│  itfs-window-server.ts   HTTP server; port → process.env.ITFS_WINDOW_PORT;        │
+│                          open/close BrowserWindow 320×600, alwaysOnTop,           │
 │                          positioned right of the main window, clamped in workArea│
 └────────────────────────────────│─────────────────────────────────────────────────┘
                                  ▼
