@@ -4,6 +4,7 @@ import { z } from "zod"
 
 const ITFS_API_URL = process.env.ITFS_API_URL ?? "http://localhost:3000"
 const TOKEN_PORT = process.env.ITFS_TOKEN_PORT ? parseInt(process.env.ITFS_TOKEN_PORT) : null
+const ITFS_WINDOW_PORT = process.env.ITFS_WINDOW_PORT ? parseInt(process.env.ITFS_WINDOW_PORT) : null
 
 function result(data: unknown) {
   return { output: JSON.stringify(data) }
@@ -55,6 +56,19 @@ async function apiRequest<T>(
       return apiRequest<T>(method, path, body, retry + 1)
     }
     throw err
+  }
+}
+
+async function notifyWindow(open: boolean) {
+  if (!ITFS_WINDOW_PORT) return
+  try {
+    await fetch(`http://localhost:${ITFS_WINDOW_PORT}/window`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ open }),
+    })
+  } catch {
+    // best-effort: a dead window server must not fail the tool
   }
 }
 
@@ -154,6 +168,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
               { skill_id: args.skill_id, target_level: args.target_level },
             )
             interviewUuid = data.interview.uuid
+            await notifyWindow(true)
             return result({
               ok: true,
               data: { skill_name: data.interview.skill.name, target_level: levelName(data.interview.target_level) },
@@ -225,6 +240,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
             )
             currentQaUuid = null
             if (data.qa_history.has_more_question === false) interviewUuid = null
+            await notifyWindow(false)
             return result({
               ok: true,
               data: {
@@ -249,6 +265,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
             if (iUuid === interviewUuid) {
               interviewUuid = null
               currentQaUuid = null
+              await notifyWindow(false)
             }
             return result({ ok: true, data: { status: data.interview.status } })
           } catch (e) { return handleErr(e) }
@@ -267,6 +284,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
             )
             interviewUuid = null
             currentQaUuid = null
+            await notifyWindow(false)
             return result({ ok: true, data: { status: data.interview.status } })
           } catch (e) { return handleErr(e) }
         },
