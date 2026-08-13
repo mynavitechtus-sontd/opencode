@@ -186,7 +186,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
             const data = await apiRequest<{
               qa_history: {
                 uuid: string
-                answered_at: string
+                answered_at: string | null
                 has_more_question: boolean
                 evaluation: string | null
                 interview: { uuid: string; status: string; target_level: number; raw_level_status: string | null }
@@ -195,6 +195,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
               "PATCH", `/api/v1/qa_histories/${qUuid}`, { answer: args.answer, answered_at: new Date().toISOString() },
             )
             currentQaUuid = null
+            if (data.qa_history.has_more_question === false) interviewUuid = null
             return result({
               ok: true,
               data: {
@@ -219,6 +220,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
               "PATCH", `/api/v1/qa_histories/${qUuid}`, { skipped: args.skipped },
             )
             currentQaUuid = null
+            if (data.qa_history.has_more_question === false) interviewUuid = null
             return result({
               ok: true,
               data: { qa_uuid: data.qa_history.uuid, has_more_question: data.qa_history.has_more_question },

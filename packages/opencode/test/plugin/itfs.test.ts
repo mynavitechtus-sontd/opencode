@@ -11,7 +11,7 @@ function response(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })
 }
 
-async function bridge(options: { failCancel?: boolean; failStart?: boolean } = {}) {
+async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolean; failStart?: boolean } = {}) {
   const requests: Array<{ method: string; path: string; body?: unknown }> = []
   process.env.ITFS_TOKEN_PORT = "43123"
   globalThis.fetch = (async (input, init) => {
@@ -31,6 +31,17 @@ async function bridge(options: { failCancel?: boolean; failStart?: boolean } = {
       return response({ qa_history: { uuid: "qa-uuid", question: "Server question?", question_category: "situational" } })
     }
     if (url.pathname.startsWith("/api/v1/qa_histories/") && init?.method === "PATCH") {
+      if (options.completeOnAnswer) {
+        return response({
+          qa_history: {
+            uuid: "qa-uuid",
+            answered_at: "2026-08-13T10:00:00Z",
+            has_more_question: false,
+            evaluation: "Đánh giá tốt.",
+            interview: { uuid: "active-uuid", status: "completed", target_level: 4, raw_level_status: "meet" },
+          },
+        })
+      }
       return response({
         qa_history: {
           uuid: "qa-uuid",
@@ -203,6 +214,34 @@ test("record_skip sends skipped true and clears the QA uuid", async () => {
     ok: false,
     error: { code: "INVALID_STATE" },
   })
+})
+
+test("record_answer completion clears the interview uuid so a new skill can start", async () => {
+  const { tools } = await bridge({ completeOnAnswer: true })
+  await startInterview(tools)
+  await askQuestion(tools)
+
+  const result = parsed(await tools.itfs_record_answer.execute({ answer: "X" }))
+
+  expect(result).toMatchObject({
+    ok: true,
+    data: {
+      has_more_question: false,
+      interview: { uuid: "active-uuid", status: "completed", target_level: 4, raw_level_status: "meet" },
+    },
+  })
+  expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "5" }))).toMatchObject({ ok: true })
+})
+
+test("record_skip completion clears the interview uuid so a new skill can start", async () => {
+  const { tools } = await bridge({ completeOnAnswer: true })
+  await startInterview(tools)
+  await askQuestion(tools)
+
+  const result = parsed(await tools.itfs_record_skip.execute({ skipped: true }))
+
+  expect(result).toMatchObject({ ok: true, data: { has_more_question: false } })
+  expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "5" }))).toMatchObject({ ok: true })
 })
 
 test("removes the score and complete tools from the bridge", async () => {
