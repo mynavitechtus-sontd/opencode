@@ -67,6 +67,34 @@ afterEach(() => {
   else process.env.ITFS_TOKEN_PORT = originalTokenPort
 })
 
+test("start_interview maps an in-progress 422 to INTERVIEW_IN_PROGRESS", async () => {
+  const { tools } = await bridge({ failStart: true })
+
+  const result = parsed(await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "4" }))
+
+  expect(result).toMatchObject({ ok: false, error: { code: "INTERVIEW_IN_PROGRESS" } })
+})
+
+test("propagates a non-in-progress validation error from start_interview as VALIDATION_ERROR", async () => {
+  const originalFetch = globalThis.fetch
+  process.env.ITFS_TOKEN_PORT = "43124"
+  globalThis.fetch = (async (input, init) => {
+    const url = new URL(String(input))
+    if (url.pathname === "/token") return response({ token: "test-token" })
+    if (url.pathname === "/api/v1/interviews" && init?.method === "POST") {
+      return response({ errors: { skill_id: ["can't be blank"] } }, 422)
+    }
+    throw new Error(`Unexpected request: ${init?.method} ${url.pathname}`)
+  }) as typeof fetch
+  const { ItfsPlugin } = await import(`${pluginUrl}?test=${++importCounter}`)
+  const tools = (await ItfsPlugin({} as never)).tool as Record<string, Tool>
+
+  const result = parsed(await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "4" }))
+
+  expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } })
+  globalThis.fetch = originalFetch
+})
+
 test("uses the active UUID and clears bridge state when cancellation UUID is omitted", async () => {
   const { requests, tools } = await bridge()
   await startInterview(tools)

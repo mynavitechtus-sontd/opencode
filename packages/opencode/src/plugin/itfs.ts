@@ -41,7 +41,11 @@ async function apiRequest<T>(
 
     if (!res.ok) {
       const msg = await res.text().catch(() => "Request failed")
-      throw { code: res.status === 422 ? "VALIDATION_ERROR" : "SERVER_ERROR", message: msg }
+      let errors: Record<string, unknown> | undefined
+      if (res.status === 422) {
+        try { errors = (JSON.parse(msg) as { errors?: Record<string, unknown> }).errors } catch { errors = undefined }
+      }
+      throw { code: res.status === 422 ? "VALIDATION_ERROR" : "SERVER_ERROR", message: msg, errors }
     }
 
     return (await res.json()) as T
@@ -139,7 +143,15 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
               ok: true,
               data: { skill_name: `skill-${args.skill_id}`, target_level: String(args.target_level) },
             })
-          } catch (e) { return handleErr(e) }
+          } catch (e) {
+            if (typeof e === "object" && e !== null && "errors" in e) {
+              const errors = (e as { errors?: Record<string, unknown> }).errors
+              if (errors?.status) {
+                return result({ ok: false, error: { code: "INTERVIEW_IN_PROGRESS", message: "An interview is already in progress" } })
+              }
+            }
+            return handleErr(e)
+          }
         },
       }),
 
