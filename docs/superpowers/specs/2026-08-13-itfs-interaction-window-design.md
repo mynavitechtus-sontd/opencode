@@ -89,14 +89,14 @@ feature is desktop-only without breaking other surfaces.
 
 ## Desktop main window server (`packages/desktop/src/main/itfs-window-server.ts`, new)
 
-Self-contained file mirroring `itfs-token-server.ts`:
+Mirrors `itfs-token-server.ts`:
 
 - `startItfsWindowServer(): Promise<number>` — HTTP server bound to `127.0.0.1` on an
   ephemeral port. Handles `POST /window` with JSON `{ open: boolean }`; validates the
   body (400 on malformed input). `open: true` → `openItfsWindow()`, `open: false` →
   `closeItfsWindow()`; responds `{ ok: true }`. Loopback-only, no auth (same as the
   token server).
-- Module-private `openItfsWindow()` / `closeItfsWindow()`:
+- `openItfsWindow()` / `closeItfsWindow()`:
   - Window options: `{ width: 320, height: 600, minWidth: 200, minHeight: 200,
     resizable: true, frame: false, alwaysOnTop: true, skipTaskbar: true, show: false }`.
   - Loads a static placeholder page via a `data:` URL.
@@ -105,8 +105,14 @@ Self-contained file mirroring `itfs-token-server.ts`:
     `screen.getDisplayMatching(bounds).workArea`.
   - Idempotent: opening when the window already exists only shows + repositions it
     (covers the case where the main window moved); closing when there is none is a no-op.
-  - `win.on("closed")` clears the module-level reference.
-- Export pure function `positionItfsWindow(bounds, workArea, size)` for unit testing.
+  - `win.on("closed")` clears the module-level reference; the anchored main window's
+    `closed` event also closes the ITFS window.
+- `closeItfsWindow()` is exported so `index.ts` can tear the window down on app quit.
+
+### Geometry (`packages/desktop/src/main/itfs-window-position.ts`, new)
+
+Pure module (no Electron imports) exporting `Rect` and the pure function
+`positionItfsWindow(bounds, workArea, size)` so the clamping rules are unit-testable.
 
 ### Positioning rules
 
@@ -117,8 +123,9 @@ Self-contained file mirroring `itfs-token-server.ts`:
   There is no lower clamp on `x`; if the work area is narrower than the window, the
   window may extend past the work area's left edge.
 - `y = Math.min(Math.max(mainWin.y, workArea.y), workArea.bottom - height)` — aligned
-  with the main window's top, kept within the work area vertically (top-aligned if the
-  work area is shorter than the window).
+  with the main window's top, clamped above to the work area's top and below so the
+  bottom edge stays inside the work area (bottom-aligned if the work area is shorter
+  than the window).
 
 ## Plumbing (`packages/desktop/src/main/index.ts`)
 
