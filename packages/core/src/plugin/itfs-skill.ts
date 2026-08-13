@@ -12,6 +12,9 @@ import itfsLevelsDefinitionContent from "./skill/itfs-levels-definition.md" with
 
 const ITFS_LEVELS_MARKER = "{{ITFS_LEVELS_DEFINITION}}"
 
+export const composeItfsInterview = (body: string, levels: string) =>
+  body.replace(ITFS_LEVELS_MARKER, () => levels)
+
 export const Plugin = define({
   id: "itfs-skill",
   effect: Effect.fn(function* (ctx) {
@@ -24,7 +27,7 @@ export const Plugin = define({
             description:
               "Use when the user wants to evaluate, verify, or assess ITFS levels, or explicitly asks to start or continue an ITFS interview session.",
             location: AbsolutePath.make("/builtin/itfs-interview.md"),
-            content: itfsInterviewContent.replace(ITFS_LEVELS_MARKER, () => itfsLevelsDefinitionContent),
+            content: composeItfsInterview(itfsInterviewContent, itfsLevelsDefinitionContent),
           }),
         }),
       )

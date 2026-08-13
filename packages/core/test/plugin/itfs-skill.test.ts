@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { ItfsSkillPlugin } from "@opencode-ai/core/plugin/itfs-skill"
+import { composeItfsInterview, ItfsSkillPlugin } from "@opencode-ai/core/plugin/itfs-skill"
 import { SkillV2 } from "@opencode-ai/core/skill"
 import { testEffect } from "../lib/effect"
 import { host } from "./host"
@@ -56,6 +56,14 @@ describe("ItfsSkillPlugin.Plugin", () => {
       expect(interview).toBeDefined()
       expect(interview?.content).toContain("$\\leftrightarrow$")
       expect(interview?.content).toContain("# ITFS Level Definition")
+    }),
+  )
+
+  it.effect("composeItfsInterview preserves dollar substitution sequences literally", () =>
+    Effect.gen(function* () {
+      const body = "prefix {{ITFS_LEVELS_DEFINITION}} suffix"
+      const levels = "$& $' $$ $` $1 literal"
+      expect(composeItfsInterview(body, levels)).toBe("prefix $& $' $$ $` $1 literal suffix")
     }),
   )
 })
