@@ -1,4 +1,4 @@
-import { createServer } from "node:http"
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 import { BrowserWindow, screen } from "electron"
 import { positionItfsWindow } from "./itfs-window-position"
 import { getLastFocusedWindow } from "./windows"
@@ -9,6 +9,7 @@ const MIN_WIDTH = 200
 const MIN_HEIGHT = 200
 
 let itfsWindow: BrowserWindow | null = null
+const hookedAnchors = new WeakSet<BrowserWindow>()
 
 function anchorWindow(): BrowserWindow | null {
   const focused = getLastFocusedWindow()
@@ -61,7 +62,10 @@ function openItfsWindow() {
   win.once("closed", () => {
     itfsWindow = null
   })
-  anchor.once("closed", closeItfsWindow)
+  if (!hookedAnchors.has(anchor)) {
+    hookedAnchors.add(anchor)
+    anchor.once("closed", closeItfsWindow)
+  }
   void win.loadURL(placeholderUrl())
   win.once("ready-to-show", () => win.show())
   itfsWindow = win
@@ -78,24 +82,12 @@ export function closeItfsWindow() {
 
 export function startItfsWindowServer(): Promise<number> {
   return new Promise((resolve, reject) => {
-    const server = createServer(async (req, res) => {
-      if (req.method !== "POST") {
-        res.writeHead(405, { "Content-Type": "application/json" })
-        res.end(JSON.stringify({ error: "Method not allowed" }))
-        return
-      }
-      let body = ""
-      for await (const chunk of req) body += chunk
-      const parsed = parseWindowBody(body)
-      if (!parsed) {
-        res.writeHead(400, { "Content-Type": "application/json" })
-        res.end(JSON.stringify({ error: "Expected { open: boolean }" }))
-        return
-      }
-      if (parsed.open) openItfsWindow()
-      else closeItfsWindow()
-      res.writeHead(200, { "Content-Type": "application/json" })
-      res.end(JSON.stringify({ ok: true }))
+    const server = createServer((req, res) => {
+      void handleWindowRequest(req, res).catch(() => {
+        if (res.headersSent) return
+        res.writeHead(500, { "Content-Type": "application/json" })
+        res.end(JSON.stringify({ error: "Internal error" }))
+      })
     })
 
     server.on("error", reject)
@@ -109,6 +101,31 @@ export function startItfsWindowServer(): Promise<number> {
       }
     })
   })
+}
+
+async function handleWindowRequest(req: IncomingMessage, res: ServerResponse) {
+  if (req.method !== "POST") {
+    res.writeHead(405, { "Content-Type": "application/json" })
+    res.end(JSON.stringify({ error: "Method not allowed" }))
+    return
+  }
+  if (req.url !== "/window") {
+    res.writeHead(404, { "Content-Type": "application/json" })
+    res.end(JSON.stringify({ error: "Not found" }))
+    return
+  }
+  let body = ""
+  for await (const chunk of req) body += chunk
+  const parsed = parseWindowBody(body)
+  if (!parsed) {
+    res.writeHead(400, { "Content-Type": "application/json" })
+    res.end(JSON.stringify({ error: "Expected { open: boolean }" }))
+    return
+  }
+  if (parsed.open) openItfsWindow()
+  else closeItfsWindow()
+  res.writeHead(200, { "Content-Type": "application/json" })
+  res.end(JSON.stringify({ ok: true }))
 }
 
 function parseWindowBody(body: string): { open: boolean } | null {
