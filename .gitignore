@@ -32,3 +32,8 @@ UPCOMING_CHANGELOG.md
 logs/
 *.bun-build
 tsconfig.tsbuildinfo
+
+# Generated ITFS skill content (synced from itfs-interview repo)
+packages/core/src/plugin/skill/itfs-interview.md
+packages/core/src/plugin/skill/itfs-onboarding.md
+packages/core/src/plugin/skill/itfs-levels-definition.md
