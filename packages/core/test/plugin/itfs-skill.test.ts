@@ -46,4 +46,16 @@ describe("ItfsSkillPlugin.Plugin", () => {
       expect(list.filter((s) => s.name === "itfs-interview")).toHaveLength(1)
     }),
   )
+
+  it.effect("does not interpret $-substitution sequences in inlined level definitions", () =>
+    Effect.gen(function* () {
+      const skill = yield* SkillV2.Service
+      yield* ItfsSkillPlugin.Plugin.effect(host({ skill: { ...skill, reload: skill.reload } }))
+
+      const interview = (yield* skill.list()).find((s) => s.name === "itfs-interview")
+      expect(interview).toBeDefined()
+      expect(interview?.content).toContain("$\\leftrightarrow$")
+      expect(interview?.content).toContain("# ITFS Level Definition")
+    }),
+  )
 })

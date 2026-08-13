@@ -24,7 +24,7 @@ export const Plugin = define({
             description:
               "Use when the user wants to evaluate, verify, or assess ITFS levels, or explicitly asks to start or continue an ITFS interview session.",
             location: AbsolutePath.make("/builtin/itfs-interview.md"),
-            content: itfsInterviewContent.replace(ITFS_LEVELS_MARKER, itfsLevelsDefinitionContent),
+            content: itfsInterviewContent.replace(ITFS_LEVELS_MARKER, () => itfsLevelsDefinitionContent),
           }),
         }),
       )
