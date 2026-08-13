@@ -49,6 +49,7 @@ import { createAuthService, routeUrl } from "./auth"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startItfsTokenServer } from "./itfs-token-server"
+import { closeItfsWindow, startItfsWindowServer } from "./itfs-window-server"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 
@@ -234,11 +235,13 @@ const main = Effect.gen(function* () {
 
   app.on("before-quit", () => {
     setAppQuitting()
+    closeItfsWindow()
     void stopSidecars()
   })
 
   app.on("will-quit", () => {
     setAppQuitting()
+    closeItfsWindow()
     void stopSidecars()
   })
 
@@ -352,6 +355,9 @@ const main = Effect.gen(function* () {
       }),
     )
     logger.log("itfs token server started", { port: itfsTokenPort })
+    const itfsWindowPort = yield* Effect.promise(() => startItfsWindowServer())
+    process.env.ITFS_WINDOW_PORT = String(itfsWindowPort)
+    logger.log("itfs window server started", { port: itfsWindowPort })
     process.env.ITFS_API_URL = "http://localhost:3000"
 
     if (SIDECAR_VERSION === "v2") {
