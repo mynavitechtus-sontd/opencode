@@ -38,7 +38,7 @@ async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolea
             answered_at: "2026-08-13T10:00:00Z",
             has_more_question: false,
             evaluation: "Đánh giá tốt.",
-            interview: { uuid: "active-uuid", status: "completed", target_level: 4, raw_level_status: "meet" },
+            interview: { uuid: "active-uuid", status: "completed", target_level: "M2", raw_level_status: "meet" },
           },
         })
       }
@@ -48,7 +48,7 @@ async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolea
           answered_at: "2026-08-13T10:00:00Z",
           has_more_question: true,
           evaluation: "Đánh giá tốt.",
-          interview: { uuid: "active-uuid", status: "in_progress", target_level: 4, raw_level_status: null },
+          interview: { uuid: "active-uuid", status: "in_progress", target_level: "M2", raw_level_status: null },
         },
       })
     }
@@ -61,7 +61,7 @@ async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolea
 }
 
 async function startInterview(tools: Record<string, Tool>) {
-  await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "4" })
+  await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "M2" })
 }
 
 async function askQuestion(tools: Record<string, Tool>) {
@@ -81,7 +81,7 @@ afterEach(() => {
 test("start_interview maps an in-progress 422 to INTERVIEW_IN_PROGRESS", async () => {
   const { tools } = await bridge({ failStart: true })
 
-  const result = parsed(await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "4" }))
+  const result = parsed(await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "M2" }))
 
   expect(result).toMatchObject({ ok: false, error: { code: "INTERVIEW_IN_PROGRESS" } })
 })
@@ -100,7 +100,7 @@ test("propagates a non-in-progress validation error from start_interview as VALI
   const { ItfsPlugin } = await import(`${pluginUrl}?test=${++importCounter}`)
   const tools = (await ItfsPlugin({} as never)).tool as Record<string, Tool>
 
-  const result = parsed(await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "4" }))
+  const result = parsed(await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "M2" }))
 
   expect(result).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } })
   globalThis.fetch = originalFetch
@@ -192,7 +192,7 @@ test("record_answer surfaces has_more_question, evaluation, and interview and cl
       qa_uuid: "qa-uuid",
       has_more_question: true,
       evaluation: "Đánh giá tốt.",
-      interview: { uuid: "active-uuid", status: "in_progress", target_level: 4, raw_level_status: null },
+      interview: { uuid: "active-uuid", status: "in_progress", target_level: "M2", raw_level_status: null },
     },
   })
   expect(parsed(await tools.itfs_record_answer.execute({ answer: "Lại" }))).toMatchObject({
@@ -227,10 +227,10 @@ test("record_answer completion clears the interview uuid so a new skill can star
     ok: true,
     data: {
       has_more_question: false,
-      interview: { uuid: "active-uuid", status: "completed", target_level: 4, raw_level_status: "meet" },
+      interview: { uuid: "active-uuid", status: "completed", target_level: "M2", raw_level_status: "meet" },
     },
   })
-  expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "5" }))).toMatchObject({ ok: true })
+  expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "M3" }))).toMatchObject({ ok: true })
 })
 
 test("record_skip completion clears the interview uuid so a new skill can start", async () => {
@@ -241,7 +241,7 @@ test("record_skip completion clears the interview uuid so a new skill can start"
   const result = parsed(await tools.itfs_record_skip.execute({ skipped: true }))
 
   expect(result).toMatchObject({ ok: true, data: { has_more_question: false } })
-  expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "5" }))).toMatchObject({ ok: true })
+  expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "M3" }))).toMatchObject({ ok: true })
 })
 
 test("removes the score and complete tools from the bridge", async () => {

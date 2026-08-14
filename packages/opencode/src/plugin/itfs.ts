@@ -99,7 +99,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         description: "Update current user profile",
         args: {
           focus_role: z.enum(["backend", "frontend", "mobile"]).nullable().optional(),
-          old_level: z.number().min(1).max(9).nullable().optional(),
+          old_level: z.enum(["J1", "J2", "J3", "M1", "M2", "M3", "S1", "S2", "S3"]).nullable().optional(),
           primary_role: z.enum(["backend", "frontend", "mobile"]).optional(),
         },
         execute: async (args) => {
@@ -129,19 +129,19 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         description: "Start a new ITFS interview for a specific skill",
         args: {
           skill_id: z.union([z.number().int().positive(), z.string()]),
-          target_level: z.union([z.string(), z.number()]),
+          target_level: z.enum(["J1", "J2", "J3", "M1", "M2", "M3", "S1", "S2", "S3"]),
         },
         execute: async (args) => {
           try {
             requireNoInterview()
             const data = await apiRequest<{ interview: { uuid: string } }>("POST", "/api/v1/interviews", {
               skill_id: args.skill_id,
-              target_level: String(args.target_level),
+              target_level: args.target_level,
             })
             interviewUuid = data.interview.uuid
             return result({
               ok: true,
-              data: { skill_name: `skill-${args.skill_id}`, target_level: String(args.target_level) },
+              data: { skill_name: `skill-${args.skill_id}`, target_level: args.target_level },
             })
           } catch (e) {
             if (typeof e === "object" && e !== null && "errors" in e) {
@@ -189,7 +189,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
                 answered_at: string | null
                 has_more_question: boolean
                 evaluation: string | null
-                interview: { uuid: string; status: string; target_level: number; raw_level_status: string | null }
+                interview: { uuid: string; status: string; target_level: string; raw_level_status: string | null }
               }
             }>(
               "PATCH", `/api/v1/qa_histories/${qUuid}`, { answer: args.answer, answered_at: new Date().toISOString() },
