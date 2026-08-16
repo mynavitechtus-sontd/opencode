@@ -26,7 +26,7 @@ export const Plugin = define({
           skill: SkillV2.Info.make({
             name: "itfs-interview",
             description:
-              "Sử dụng khi user muốn đánh giá, phỏng vấn, evaluate, assess or self-assessment ITFS level.",
+              "Use when the user wants to evaluate, verify, or assess ITFS levels, or explicitly asks to start or continue an ITFS interview session.",
             location: AbsolutePath.make("/builtin/itfs-interview.md"),
             content: stripFrontmatter(itfsInterviewContent),
           }),

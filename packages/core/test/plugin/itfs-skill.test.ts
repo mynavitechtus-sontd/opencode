@@ -16,7 +16,7 @@ describe("ItfsSkillPlugin.Plugin", () => {
 
       const interview = (yield* skill.list()).find((s) => s.name === "itfs-interview")
       expect(interview).toBeDefined()
-      expect(interview?.description).toContain("đánh giá, phỏng vấn")
+      expect(interview?.description).toContain("evaluate, verify, or assess ITFS levels")
       expect(interview?.content).toContain("# ITFS Interview")
       expect(interview?.content).toContain("There are nine levels:")
       expect(interview?.content).not.toMatch(/^---/)

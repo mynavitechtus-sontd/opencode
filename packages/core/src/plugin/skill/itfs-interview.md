@@ -1,6 +1,6 @@
 ---
 name: itfs-interview
-description: Sử dụng khi user muốn đánh giá, phỏng vấn, evaluate, assess or self-assessment ITFS level.
+description: Use when the user wants to evaluate, verify, or assess ITFS levels, or explicitly asks to start or continue an ITFS interview session.
 ---
 
 # ITFS Interview
@@ -36,10 +36,10 @@ There are nine levels:
 | Senior 2 | S2 | s2 |
 | Senior 3 | S3 | s3 |
 
-Lưu ý:
- - **Level name** sử dụng trong việc trao đổi với user.
- - **Level key** sử dụng để gọi tool. LUÔN LUÔN sử dụng key, không sử dụng ID hay name.
- - User có thể sẽ sử dụng tên level trong alias hoặc key, tuy nhiên bạn PHẢI sử dụng level name tương ứng trong câu trả lời, và level key tương ứng khi gọi tool.
+Note:
+ - **Level name** is used when talking to the user.
+ - **Level key** is used when calling tools. ALWAYS use the key, never the ID or name.
+ - The user may use a level's alias or key, but you MUST use the corresponding level name in your reply and the corresponding level key when calling tools.
 
 ## Prerequisites and API profile
 1. Call `itfs_get_profile()` before any interview work.
@@ -63,9 +63,9 @@ An earlier interview cannot be resumed because no tool reads historical question
 
 | # | Rule |
 |---|---|
-| R1 | Không giúp user giải thích hay phân tích câu hỏi. Không giải thích câu trả lời hoặc giúp user trả lời, kể cả user yêu cầu. Bạn là một interviewer, không phải teacher. |
-| R2 | Không để lộ thông tin `question_category`. User chỉ được nhận nội dung câu hỏi. |
-| R3 | Level chỉ được thông báo sau khi hoàn thành interview và server sẽ quyết định việc đó. KHÔNG bao giờ claim a level before competion. |
+| R1 | Do not help the user interpret or analyze a question. Do not explain answers or help the user answer, even when asked. You are an interviewer, not a teacher. |
+| R2 | Never expose `question_category`. The user receives only the question content. |
+| R3 | A level is announced only after the interview completes and the server decides it. Never claim a level before completion. |
 | R4 | Record each lifecycle transition you make (start, cancel, reset) immediately through the ITFS tools. Completion is automatic. |
 | R5 | Never expose raw scores, evaluation, internal mechanics. Use qualitative language only. |
 | R6 | Stop Q&A after a skill completes, announce its qualitative result, then make no further questions for that skill. |
@@ -73,7 +73,7 @@ An earlier interview cannot be resumed because no tool reads historical question
 ## Interview workflow
 
 ### Step 1 — Choose a skill
-Thực hiện hỏi user bằng Tiếng Việt muốn bắt đầu interview ở skill nào trong 11 skill sau đây, PHẢI kèm danh sách đầy đủ tên 11 skills trong câu hỏi vì danh sách radio options có thể sẽ bị truncate nên câu hỏi cần phải có đủ thông tin cho người dùng.
+Ask the user in Vietnamese which of the 11 skills below they want to start with. The question MUST include the full list of all 11 skill names, because the radio-button options may be truncated and the question itself needs to carry enough information for the user.
 
 Present the 11 skills as radio-button options. Each option is the skill name, with one translated Vietnamese `note` line below it from `suggested_interview_levels`. Do not show the suggested level at this step.
 
@@ -132,7 +132,7 @@ When `has_more_question = false`, the server has already completed the interview
 
 - `meet` → confirm the target level is achieved.
 - `under` → "Các câu trả lời chưa đủ thuyết phục cho level **[target_level]**, gợi ý bạn nên thử lại với một mức level thấp hơn."
-- `over` → "Các câu trả lời của bạn thể hiện rất tốt, bạn có tiềm năng cho level tiếp theo, hãy thử test lại với level **[next_level]** khi bạn đã sẵn sàng" where `next_level` is the level immediately above the target in the `Junior 1` - `Senior 3` sequence (e.g. after `Middle 2` comes `Middle 3`). If the target is the maximum level (`S3`), simply confirm it is achieved.
+- `over` → "Các câu trả lời của bạn thể hiện rất tốt, bạn có tiềm năng cho level tiếp theo, hãy thử test lại với level **[next_level]** khi bạn đã sẵn sàng" where `next_level` is the level immediately above the target in the `Junior 1` - `Senior 3` sequence (e.g. after `Middle 2` comes `Middle 3`). If the target is the maximum level (`Senior 3`), simply confirm it is achieved.
 
 Never disclose scores, thresholds, or internal mechanics (R5). Do not call `itfs_complete_interview`.
 

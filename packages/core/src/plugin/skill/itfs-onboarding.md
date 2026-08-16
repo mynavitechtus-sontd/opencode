@@ -32,13 +32,13 @@ Ask only for values whose profile field is missing:
 | `focus_role` | `Bạn đang tập trung phát triển thêm mảng nào trong ITFS? (ví dụ: Frontend, Backend, Mobile)` | `frontend` \| `backend` \| `mobile` |
 | `old_level` | `Level trước ITFS của bạn là gì? (ví dụ: Junior 3, Senior 1,...)` | `J1`–`S3` key (e.g. `J3`, `M2`, `S1`) |
 
-KHÔNG BAO GIỜ sử dụng các key `J1`–`S3` để giao tiếp với user. Hãy sử dụng tên hoàn chỉnh `Junior 1` - `Senior 3`.
+Never use the `J1`–`S3` keys when communicating with the user. Always use the full names `Junior 1` - `Senior 3`.
 
 ### Step 3 — Validate and normalize
 
 Normalize role inputs case-insensitively: `FE`, `front end`, and `frontend` to `frontend`; `BE`, `back end`, and `backend` to `backend`; and `ios`, `android`, `flutter`, `react native`, and `mobile` to `mobile`.
 
-Chấp nhận tất cả các cách gọi level trong bảng bên dưới (gồm Level names, level keys, aliases); normalize them to the canonical keys (`J1`–`S3`) and pass `old_level` as the key.
+Accept every level reference in the table below (level names, level keys, and aliases); normalize them to the canonical keys (`J1`–`S3`) and pass `old_level` as the key.
 
 | Level name | Level key | Aliases |
 |---|---|---|
@@ -62,7 +62,7 @@ Call `itfs_update_profile()` once with only the normalized fields collected in t
 
 ### Step 5 — Complete
 
-Summary lại profile của người dùng và in ra sau đó **Branch based on how onboarding was triggered:**
+Summarize the user's profile, then **branch based on how onboarding was triggered:**
 
 - **User explicitly asked for onboarding** (keywords: onboarding, new, first time, setup, đăng ký, lần đầu, or user ran the skill directly): notify in Vietnamese that onboarding is complete:
 
@@ -88,7 +88,7 @@ Summary lại profile của người dùng và in ra sau đó **Branch based on 
 - Asking for a value already present in the profile.
 - Sending a pre-existing profile field in the `itfs_update_profile` payload.
 - Sending unnormalized roles or level values outside the `J1`–`S3` key set.
-- Sử dụng `J1` - `S3` key set để giao tiếp thông tin về level với user.
+- Using `J1`–`S3` keys to communicate level information to the user.
 - Allowing `primary_role` and `focus_role` to match.
 - Continuing to Step 5 after an unsuccessful `itfs_update_profile` call.
 
