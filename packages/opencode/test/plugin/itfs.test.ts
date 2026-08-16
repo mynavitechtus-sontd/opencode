@@ -11,7 +11,7 @@ function response(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })
 }
 
-async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolean; failStart?: boolean } = {}) {
+async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolean; failStart?: boolean; fetchStatus?: "completed" | "in_progress" } = {}) {
   const requests: Array<{ method: string; path: string; body?: unknown }> = []
   process.env.ITFS_TOKEN_PORT = "43123"
   globalThis.fetch = (async (input, init) => {
@@ -25,7 +25,21 @@ async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolea
       return response({ interview: { uuid: "active-uuid", skill: { name: "Security Engineering" }, target_level: "M2" } })
     }
     if (url.pathname.startsWith("/api/v1/interviews/") && init?.method === "PATCH") {
-      return options.failCancel ? new Response("interview missing", { status: 404 }) : response({})
+      if (options.failCancel) return new Response("interview missing", { status: 404 })
+      const status = typeof body === "object" && body !== null && "status" in body ? String(body.status) : "canceled"
+      return response({ interview: { status } })
+    }
+    if (url.pathname.startsWith("/api/v1/interviews/") && init?.method === "GET") {
+      const uuid = url.pathname.split("/").at(-1)
+      return response({
+        interview: {
+          uuid,
+          skill: { id: 1, name: "Security Engineering" },
+          target_level: "M2",
+          status: options.fetchStatus ?? "completed",
+          raw_level_status: options.fetchStatus === "in_progress" ? null : "meet",
+        },
+      })
     }
     if (url.pathname === "/api/v1/qa_histories" && init?.method === "POST") {
       return response({ qa_history: { uuid: "qa-uuid", question: "Server question?" } })
@@ -261,4 +275,59 @@ test("removes the score and complete tools from the bridge", async () => {
 
   expect(tools.itfs_score_answer).toBeUndefined()
   expect(tools.itfs_complete_interview).toBeUndefined()
+})
+
+test("cancel_interview returns the status from the server response", async () => {
+  const { tools } = await bridge()
+  await startInterview(tools)
+
+  const result = parsed(await tools.itfs_cancel_interview.execute({}))
+
+  expect(result).toMatchObject({ ok: true, data: { status: "canceled" } })
+})
+
+test("reset_interview returns the status from the server response", async () => {
+  const { tools } = await bridge()
+  await startInterview(tools)
+
+  const result = parsed(await tools.itfs_reset_interview.execute({ error_reason: "Agent stuck" }))
+
+  expect(result).toMatchObject({ ok: true, data: { status: "error" } })
+})
+
+test("fetch_interview returns a completed interview detail by explicit uuid", async () => {
+  const { requests, tools } = await bridge()
+
+  const result = parsed(await tools.itfs_fetch_interview.execute({ interview_uuid: "active-uuid" }))
+
+  expect(requests).toContainEqual({ method: "GET", path: "/api/v1/interviews/active-uuid" })
+  expect(result).toMatchObject({
+    ok: true,
+    data: { uuid: "active-uuid", status: "completed", raw_level_status: "meet" },
+  })
+})
+
+test("fetch_interview errors when no interview uuid is available", async () => {
+  const { tools } = await bridge()
+
+  const result = parsed(await tools.itfs_fetch_interview.execute({}))
+
+  expect(result).toMatchObject({ ok: false, error: { code: "INVALID_STATE" } })
+})
+
+test("fetch_interview falls back to the active session interview uuid", async () => {
+  const { tools } = await bridge()
+  await startInterview(tools)
+
+  const result = parsed(await tools.itfs_fetch_interview.execute({}))
+
+  expect(result).toMatchObject({ ok: true, data: { status: "completed" } })
+})
+
+test("fetch_interview errors when the interview is not completed", async () => {
+  const { tools } = await bridge({ fetchStatus: "in_progress" })
+
+  const result = parsed(await tools.itfs_fetch_interview.execute({ interview_uuid: "active-uuid" }))
+
+  expect(result).toMatchObject({ ok: false, error: { code: "INVALID_STATE", message: "Interview not completed" } })
 })

@@ -243,12 +243,14 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         execute: async (args) => {
           try {
             const iUuid = args.interview_uuid ?? requireInterview()
-            await apiRequest<unknown>("PATCH", `/api/v1/interviews/${iUuid}`, { status: "canceled" })
+            const data = await apiRequest<{ interview: { status: string } }>(
+              "PATCH", `/api/v1/interviews/${iUuid}`, { status: "canceled" },
+            )
             if (iUuid === interviewUuid) {
               interviewUuid = null
               currentQaUuid = null
             }
-            return result({ ok: true, data: { status: "canceled" } })
+            return result({ ok: true, data: { status: data.interview.status } })
           } catch (e) { return handleErr(e) }
         },
       }),
@@ -259,12 +261,36 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         execute: async (args) => {
           try {
             const iUuid = requireInterview()
-            await apiRequest<unknown>("PATCH", `/api/v1/interviews/${iUuid}`, {
-              status: "error", error_reason: args.error_reason,
-            })
+            const data = await apiRequest<{ interview: { status: string } }>(
+              "PATCH", `/api/v1/interviews/${iUuid}`,
+              { status: "error", error_reason: args.error_reason },
+            )
             interviewUuid = null
             currentQaUuid = null
-            return result({ ok: true, data: { status: "error" } })
+            return result({ ok: true, data: { status: data.interview.status } })
+          } catch (e) { return handleErr(e) }
+        },
+      }),
+
+      itfs_fetch_interview: tool({
+        description: "Fetch interview details by uuid; intended to summarize a completed interview returned by itfs_record_answer",
+        args: { interview_uuid: z.string().optional() },
+        execute: async (args) => {
+          try {
+            const iUuid = args.interview_uuid ?? interviewUuid
+            if (!iUuid) {
+              return result({
+                ok: false,
+                error: { code: "INVALID_STATE", message: "No interview in session or interview not completed" },
+              })
+            }
+            const data = await apiRequest<{ interview: { status: string } & Record<string, unknown> }>(
+              "GET", `/api/v1/interviews/${iUuid}`,
+            )
+            if (data.interview.status !== "completed") {
+              return result({ ok: false, error: { code: "INVALID_STATE", message: "Interview not completed" } })
+            }
+            return result({ ok: true, data: data.interview })
           } catch (e) { return handleErr(e) }
         },
       }),
