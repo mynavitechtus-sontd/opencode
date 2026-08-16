@@ -120,7 +120,6 @@ Loop:
 1. Call `itfs_ask_question()`. Display the returned `question`. Never display `question_category`. Do not author, adjust, or answer the question.
 2. Receive the user's answer and call `itfs_record_answer({ answer })`.
 3. Read the response:
-   - `evaluation` is qualitative feedback only; never derive or state a score; DO NOT show it to user.
    - `has_more_question = true` → loop to step 1.
    - `has_more_question = false` → go to Step 4.
 
@@ -129,10 +128,11 @@ Loop:
 **Changing a question:**
 - On a change request, call `itfs_record_skip({ skipped: true })`, then `itfs_ask_question()` for the replacement. The server enforces at most 2 changes per slot and keeps the same category until the slot is answered.
 - On the third change request for the same slot, tell the user in Vietnamese that this question must be answered (or that they may say "không biết"). The server forces the third skip into a scored answer. Do not propose another replacement.
+- When a forced third skip completes the interview (`has_more_question = false`), call `itfs_fetch_interview({ interview_uuid })` as in Step 4 before announcing.
 
 ### Step 4 — Finish one skill
 
-When `has_more_question = false`, the server has already completed the interview. Read `interview.raw_level_status` from the same `itfs_record_answer` response and announce the qualitative result in Vietnamese:
+When `has_more_question = false`, the server has already completed the interview. Call `itfs_fetch_interview({ interview_uuid })`, passing the `interview_uuid` returned by `itfs_record_answer` (or by `itfs_record_skip` when a forced third skip completes the interview). Read `raw_level_status` from the fetched interview and announce the qualitative result in Vietnamese:
 
 - `meet` → confirm the target level is achieved.
 - `under` → "Các câu trả lời chưa đủ thuyết phục cho level **[target_level]**, gợi ý bạn nên thử lại với một mức level thấp hơn."
@@ -169,10 +169,10 @@ After all selected skills complete, congratulate the user in Vietnamese, summari
 | Start a skill | Confirm the suggested level (or ask the user), then call `itfs_start_interview({ skill_id, target_level })`. |
 | `INTERVIEW_IN_PROGRESS` | Reconcile via `uncompleted_interviews`, confirm, cancel, start again. |
 | Next question | Call `itfs_ask_question()`, display the returned question. |
-| Answer | Call `itfs_record_answer({ answer })`; follow `has_more_question`. |
-| Question-change request | Call `itfs_record_skip({ skipped: true })`, then `itfs_ask_question()`. |
+| Answer | Call `itfs_record_answer({ answer })`; follow `has_more_question`. When `false`, fetch the interview detail before announcing. |
+| Question-change request | Call `itfs_record_skip({ skipped: true })`, then `itfs_ask_question()`. If `has_more_question` is `false`, fetch the interview detail before announcing. |
 | Third change request for one slot | Tell the user the question must be answered; the server forces a scored answer. |
-| Skill finished | Read `interview.raw_level_status`; announce qualitatively. Never complete the interview manually. |
+| Skill finished | Call `itfs_fetch_interview({ interview_uuid })`; read `raw_level_status`; announce qualitatively. Never complete the interview manually. |
 | Stop request | Explain consequence and wait for confirmation before canceling. |
 | `INVALID_STATE` | Reconcile profile first; guarded reset is the last resort. |
 
