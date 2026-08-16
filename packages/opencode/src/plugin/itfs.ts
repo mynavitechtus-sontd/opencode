@@ -81,6 +81,21 @@ function handleErr(err: unknown) {
   return result({ ok: false, error: { code: "UNKNOWN", message: String(err) } })
 }
 
+const LEVEL_NAMES: Record<string, string> = {
+  J1: "Junior 1",
+  J2: "Junior 2",
+  J3: "Junior 3",
+  M1: "Middle 1",
+  M2: "Middle 2",
+  M3: "Middle 3",
+  S1: "Senior 1",
+  S2: "Senior 2",
+  S3: "Senior 3",
+}
+function levelName(key: string): string {
+  return LEVEL_NAMES[key] ?? key
+}
+
 export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
   return {
     tool: {
@@ -134,14 +149,14 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         execute: async (args) => {
           try {
             requireNoInterview()
-            const data = await apiRequest<{ interview: { uuid: string } }>("POST", "/api/v1/interviews", {
-              skill_id: args.skill_id,
-              target_level: args.target_level,
-            })
+            const data = await apiRequest<{ interview: { uuid: string; skill: { name: string }; target_level: string } }>(
+              "POST", "/api/v1/interviews",
+              { skill_id: args.skill_id, target_level: args.target_level },
+            )
             interviewUuid = data.interview.uuid
             return result({
               ok: true,
-              data: { skill_name: `skill-${args.skill_id}`, target_level: args.target_level },
+              data: { skill_name: data.interview.skill.name, target_level: levelName(data.interview.target_level) },
             })
           } catch (e) {
             if (typeof e === "object" && e !== null && "errors" in e) {
@@ -161,17 +176,13 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         execute: async () => {
           try {
             requireInterview()
-            const data = await apiRequest<{ qa_history: { uuid: string; question: string; question_category: string } }>(
+            const data = await apiRequest<{ qa_history: { uuid: string; question: string } }>(
               "POST", "/api/v1/qa_histories",
             )
             currentQaUuid = data.qa_history.uuid
             return result({
               ok: true,
-              data: {
-                qa_uuid: data.qa_history.uuid,
-                question: data.qa_history.question,
-                question_category: data.qa_history.question_category,
-              },
+              data: { qa_uuid: data.qa_history.uuid, question: data.qa_history.question },
             })
           } catch (e) { return handleErr(e) }
         },
@@ -184,13 +195,7 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
           try {
             const qUuid = requireQA()
             const data = await apiRequest<{
-              qa_history: {
-                uuid: string
-                answered_at: string | null
-                has_more_question: boolean
-                evaluation: string | null
-                interview: { uuid: string; status: string; target_level: string; raw_level_status: string | null }
-              }
+              qa_history: { uuid: string; answered_at: string | null; has_more_question: boolean; interview: { uuid: string } }
             }>(
               "PATCH", `/api/v1/qa_histories/${qUuid}`, { answer: args.answer, answered_at: new Date().toISOString() },
             )
@@ -200,10 +205,9 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
               ok: true,
               data: {
                 qa_uuid: data.qa_history.uuid,
+                interview_uuid: data.qa_history.interview.uuid,
                 answered_at: data.qa_history.answered_at,
                 has_more_question: data.qa_history.has_more_question,
-                evaluation: data.qa_history.evaluation,
-                interview: data.qa_history.interview,
               },
             })
           } catch (e) { return handleErr(e) }
@@ -216,14 +220,18 @@ export async function ItfsPlugin(_input: PluginInput): Promise<Hooks> {
         execute: async (args) => {
           try {
             const qUuid = requireQA()
-            const data = await apiRequest<{ qa_history: { uuid: string; has_more_question: boolean } }>(
+            const data = await apiRequest<{ qa_history: { uuid: string; has_more_question: boolean; interview: { uuid: string } } }>(
               "PATCH", `/api/v1/qa_histories/${qUuid}`, { skipped: args.skipped },
             )
             currentQaUuid = null
             if (data.qa_history.has_more_question === false) interviewUuid = null
             return result({
               ok: true,
-              data: { qa_uuid: data.qa_history.uuid, has_more_question: data.qa_history.has_more_question },
+              data: {
+                qa_uuid: data.qa_history.uuid,
+                interview_uuid: data.qa_history.interview.uuid,
+                has_more_question: data.qa_history.has_more_question,
+              },
             })
           } catch (e) { return handleErr(e) }
         },

@@ -22,13 +22,13 @@ async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolea
     requests.push({ method: init?.method ?? "GET", path: url.pathname, body })
     if (url.pathname === "/api/v1/interviews" && init?.method === "POST") {
       if (options.failStart) return response({ errors: { status: ["an interview is already in progress"] } }, 422)
-      return response({ interview: { uuid: "active-uuid" } })
+      return response({ interview: { uuid: "active-uuid", skill: { name: "Security Engineering" }, target_level: "M2" } })
     }
     if (url.pathname.startsWith("/api/v1/interviews/") && init?.method === "PATCH") {
       return options.failCancel ? new Response("interview missing", { status: 404 }) : response({})
     }
     if (url.pathname === "/api/v1/qa_histories" && init?.method === "POST") {
-      return response({ qa_history: { uuid: "qa-uuid", question: "Server question?", question_category: "situational" } })
+      return response({ qa_history: { uuid: "qa-uuid", question: "Server question?" } })
     }
     if (url.pathname.startsWith("/api/v1/qa_histories/") && init?.method === "PATCH") {
       if (options.completeOnAnswer) {
@@ -37,8 +37,7 @@ async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolea
             uuid: "qa-uuid",
             answered_at: "2026-08-13T10:00:00Z",
             has_more_question: false,
-            evaluation: "Đánh giá tốt.",
-            interview: { uuid: "active-uuid", status: "completed", target_level: "M2", raw_level_status: "meet" },
+            interview: { uuid: "active-uuid" },
           },
         })
       }
@@ -47,8 +46,7 @@ async function bridge(options: { completeOnAnswer?: boolean; failCancel?: boolea
           uuid: "qa-uuid",
           answered_at: "2026-08-13T10:00:00Z",
           has_more_question: true,
-          evaluation: "Đánh giá tốt.",
-          interview: { uuid: "active-uuid", status: "in_progress", target_level: "M2", raw_level_status: null },
+          interview: { uuid: "active-uuid" },
         },
       })
     }
@@ -106,6 +104,17 @@ test("propagates a non-in-progress validation error from start_interview as VALI
   globalThis.fetch = originalFetch
 })
 
+test("start_interview returns the skill name and a mapped level display name", async () => {
+  const { tools } = await bridge()
+
+  const result = parsed(await tools.itfs_start_interview.execute({ skill_id: 1, target_level: "M2" }))
+
+  expect(result).toMatchObject({
+    ok: true,
+    data: { skill_name: "Security Engineering", target_level: "Middle 2" },
+  })
+})
+
 test("uses the active UUID and clears bridge state when cancellation UUID is omitted", async () => {
   const { requests, tools } = await bridge()
   await startInterview(tools)
@@ -141,7 +150,7 @@ test("cancels an explicit orphan UUID without clearing an active bridge session"
   ])
   expect(parsed(await askQuestion(tools))).toMatchObject({
     ok: true,
-    data: { qa_uuid: "qa-uuid", question: "Server question?", question_category: "situational" },
+    data: { qa_uuid: "qa-uuid", question: "Server question?" },
   })
 })
 
@@ -175,11 +184,12 @@ test("ask_question posts without a body and returns the server question", async 
   expect(requests).toContainEqual({ method: "POST", path: "/api/v1/qa_histories", body: undefined })
   expect(result).toMatchObject({
     ok: true,
-    data: { qa_uuid: "qa-uuid", question: "Server question?", question_category: "situational" },
+    data: { qa_uuid: "qa-uuid", question: "Server question?" },
   })
+  expect(result.data).not.toHaveProperty("question_category")
 })
 
-test("record_answer surfaces has_more_question, evaluation, and interview and clears the QA uuid", async () => {
+test("record_answer surfaces has_more_question and interview_uuid and clears the QA uuid", async () => {
   const { tools } = await bridge()
   await startInterview(tools)
   await tools.itfs_ask_question.execute({})
@@ -190,11 +200,13 @@ test("record_answer surfaces has_more_question, evaluation, and interview and cl
     ok: true,
     data: {
       qa_uuid: "qa-uuid",
+      interview_uuid: "active-uuid",
+      answered_at: "2026-08-13T10:00:00Z",
       has_more_question: true,
-      evaluation: "Đánh giá tốt.",
-      interview: { uuid: "active-uuid", status: "in_progress", target_level: "M2", raw_level_status: null },
     },
   })
+  expect(result.data).not.toHaveProperty("evaluation")
+  expect(result.data).not.toHaveProperty("interview")
   expect(parsed(await tools.itfs_record_answer.execute({ answer: "Lại" }))).toMatchObject({
     ok: false,
     error: { code: "INVALID_STATE" },
@@ -209,7 +221,10 @@ test("record_skip sends skipped true and clears the QA uuid", async () => {
   const result = parsed(await tools.itfs_record_skip.execute({ skipped: true }))
 
   expect(requests).toContainEqual({ method: "PATCH", path: "/api/v1/qa_histories/qa-uuid", body: { skipped: true } })
-  expect(result).toMatchObject({ ok: true, data: { qa_uuid: "qa-uuid", has_more_question: true } })
+  expect(result).toMatchObject({
+    ok: true,
+    data: { qa_uuid: "qa-uuid", interview_uuid: "active-uuid", has_more_question: true },
+  })
   expect(parsed(await tools.itfs_record_skip.execute({ skipped: true }))).toMatchObject({
     ok: false,
     error: { code: "INVALID_STATE" },
@@ -225,10 +240,7 @@ test("record_answer completion clears the interview uuid so a new skill can star
 
   expect(result).toMatchObject({
     ok: true,
-    data: {
-      has_more_question: false,
-      interview: { uuid: "active-uuid", status: "completed", target_level: "M2", raw_level_status: "meet" },
-    },
+    data: { qa_uuid: "qa-uuid", interview_uuid: "active-uuid", has_more_question: false },
   })
   expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "M3" }))).toMatchObject({ ok: true })
 })
@@ -240,7 +252,7 @@ test("record_skip completion clears the interview uuid so a new skill can start"
 
   const result = parsed(await tools.itfs_record_skip.execute({ skipped: true }))
 
-  expect(result).toMatchObject({ ok: true, data: { has_more_question: false } })
+  expect(result).toMatchObject({ ok: true, data: { has_more_question: false, interview_uuid: "active-uuid" } })
   expect(parsed(await tools.itfs_start_interview.execute({ skill_id: 2, target_level: "M3" }))).toMatchObject({ ok: true })
 })
 
