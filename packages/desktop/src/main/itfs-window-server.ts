@@ -21,7 +21,7 @@ function placeholderUrl() {
   const html = `<!doctype html>
 <html>
 <head><meta charset="utf-8"><title>ITFS Interview</title>
-<style>body{font-family:system-ui;background:#161616;color:#e8e8e8;margin:0;padding:16px}h1{font-size:14px;margin:0 0 8px}p{font-size:12px;color:#999}</style>
+<style>body{font-family:system-ui;background:#ffffff;color:#111111;margin:0;padding:16px;-webkit-app-region:drag}h1{font-size:14px;margin:0 0 8px}p{font-size:12px;color:#666}</style>
 </head>
 <body><h1>ITFS Interview</h1><p>Interaction log will appear here.</p></body>
 </html>`
