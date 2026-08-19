@@ -25,6 +25,10 @@ export const dict = {
     "Interface en ligne de commande installée dans {{path}}\n\nRedémarrez votre terminal pour utiliser la commande 'opencode'.",
   "desktop.cli.failed.title": "Échec de l'installation",
   "desktop.cli.failed.message": "Impossible d'installer l'interface en ligne de commande : {{error}}",
+
+  "desktop.error.dev.rootNotFound":
+    "Élément racine introuvable. Avez-vous oublié de l'ajouter à votre index.html ? Ou peut-être que l'attribut id est mal orthographié ?",
+
   "desktop.auth.signIn.title": "Sign in",
   "desktop.auth.signIn.withGoogle": "Continue with Google",
   "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",

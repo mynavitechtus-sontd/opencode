@@ -25,6 +25,10 @@ export const dict = {
     "CLI {{path}} konumuna yüklendi\n\n'opencode' komutunu kullanmak için terminalinizi yeniden başlatın.",
   "desktop.cli.failed.title": "Yükleme başarısız oldu",
   "desktop.cli.failed.message": "CLI yüklenemedi: {{error}}",
+
+  "desktop.error.dev.rootNotFound":
+    "Kök eleman bulunamadı. index.html dosyanıza eklemeyi unuttunuz mu? Ya da id özelliği yanlış mı yazıldı?",
+
   "desktop.auth.signIn.title": "Sign in",
   "desktop.auth.signIn.withGoogle": "Continue with Google",
   "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",

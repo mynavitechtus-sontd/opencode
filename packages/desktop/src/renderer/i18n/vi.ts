@@ -21,6 +21,10 @@ export const dict = {
   "desktop.cli.installed.message": "Đã cài đặt CLI vào {{path}}\n\nKhởi động lại terminal để sử dụng lệnh 'opencode'.",
   "desktop.cli.failed.title": "Cài đặt không thành công",
   "desktop.cli.failed.message": "Không cài đặt được CLI: {{error}}",
+
+  "desktop.error.dev.rootNotFound":
+    "Không tìm thấy phần tử gốc. Bạn đã quên thêm nó vào index.html của mình? Hoặc có thể thuộc tính id bị sai chính tả?",
+
   "desktop.auth.signIn.title": "Đăng nhập",
   "desktop.auth.signIn.withGoogle": "Tiếp tục với Google",
   "desktop.auth.signIn.error.default": "Đăng nhập thất bại. Vui lòng thử lại.",

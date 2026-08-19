@@ -25,6 +25,9 @@ export const dict = {
   "desktop.cli.failed.title": "Installation Failed",
   "desktop.cli.failed.message": "Failed to install CLI: {{error}}",
 
+  "desktop.error.dev.rootNotFound":
+    "Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?",
+
   "desktop.auth.signIn.title": "Sign in",
   "desktop.auth.signIn.withGoogle": "Continue with Google",
   "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",

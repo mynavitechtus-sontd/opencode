@@ -22,6 +22,10 @@ export const dict = {
     "CLI को {{path}} पर इंस्टॉल किया गया\n\n'opencode' कमांड का उपयोग करने के लिए अपना टर्मिनल पुनः आरंभ करें।",
   "desktop.cli.failed.title": "स्थापना विफल",
   "desktop.cli.failed.message": "CLI इंस्टॉल करने में विफल: {{error}}",
+
+  "desktop.error.dev.rootNotFound":
+    "मूल तत्व नहीं मिला. क्या आप इसे अपने index.html में जोड़ना भूल गए? या हो सकता है कि आईडी विशेषता गलत वर्तनी हो गई हो?",
+
   "desktop.auth.signIn.title": "Sign in",
   "desktop.auth.signIn.withGoogle": "Continue with Google",
   "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",

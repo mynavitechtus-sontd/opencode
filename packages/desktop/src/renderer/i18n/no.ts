@@ -25,6 +25,10 @@ export const dict = {
     "CLI installert i {{path}}\n\nStart terminalen på nytt for å bruke 'opencode'-kommandoen.",
   "desktop.cli.failed.title": "Installasjon mislyktes",
   "desktop.cli.failed.message": "Kunne ikke installere CLI: {{error}}",
+
+  "desktop.error.dev.rootNotFound":
+    "Rotelement ikke funnet. Glemte du å legge det til i index.html? Eller kanskje id-attributtet er feilstavet?",
+
   "desktop.auth.signIn.title": "Sign in",
   "desktop.auth.signIn.withGoogle": "Continue with Google",
   "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",

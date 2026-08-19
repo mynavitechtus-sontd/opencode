@@ -23,6 +23,9 @@ export const dict = {
   "desktop.cli.installed.message": "CLI 已安装到 {{path}}\n\n重启终端以使用 'opencode' 命令。",
   "desktop.cli.failed.title": "安装失败",
   "desktop.cli.failed.message": "无法安装 CLI：{{error}}",
+
+  "desktop.error.dev.rootNotFound": "未找到根元素。你是不是忘了把它添加到 index.html？或者 id 属性拼写错了？",
+
   "desktop.auth.signIn.title": "Sign in",
   "desktop.auth.signIn.withGoogle": "Continue with Google",
   "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",

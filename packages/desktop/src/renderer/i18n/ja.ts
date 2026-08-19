@@ -25,6 +25,10 @@ export const dict = {
     "CLI を {{path}} にインストールしました\n\nターミナルを再起動して 'opencode' コマンドを使用してください。",
   "desktop.cli.failed.title": "インストールに失敗しました",
   "desktop.cli.failed.message": "CLI のインストールに失敗しました: {{error}}",
+
+  "desktop.error.dev.rootNotFound":
+    "ルート要素が見つかりません。index.htmlに追加するのを忘れていませんか？またはid属性のスペルが間違っていませんか？",
+
   "desktop.auth.signIn.title": "Sign in",
   "desktop.auth.signIn.withGoogle": "Continue with Google",
   "desktop.auth.signIn.error.default": "Sign in failed. Please try again.",
